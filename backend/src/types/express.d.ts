@@ -9,6 +9,9 @@ declare global {
         email: string
         role: Role
       }
+      // Validated & coerced query params. Express 5 makes req.query read-only,
+      // so the `validate(schema, 'query')` middleware writes the parsed result here.
+      validatedQuery?: unknown
     }
   }
 }

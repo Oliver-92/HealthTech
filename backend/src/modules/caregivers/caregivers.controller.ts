@@ -7,7 +7,7 @@ import type {
 } from './caregivers.schema.js'
 
 export async function list(req: Request, res: Response) {
-  const caregivers = await service.listCaregivers(req.query as ListCaregiversQuery)
+  const caregivers = await service.listCaregivers(req.validatedQuery as ListCaregiversQuery)
   res.json(caregivers)
 }
 

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { dateString } from '../../utils/schemas.js'
 
 export const createCaregiverSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -8,7 +9,7 @@ export const createCaregiverSchema = z.object({
   documentId: z.string().min(1, 'Document ID is required'),
   phone: z.string().optional(),
   hourlyRate: z.number().positive('Hourly rate must be positive'),
-  hiredAt: z.string().min(1, 'Hire date is required'),
+  hiredAt: dateString,
 })
 
 export const updateCaregiverSchema = z.object({
@@ -16,7 +17,7 @@ export const updateCaregiverSchema = z.object({
   lastName: z.string().min(1).optional(),
   phone: z.string().optional(),
   hourlyRate: z.number().positive().optional(),
-  hiredAt: z.string().optional(),
+  hiredAt: dateString.optional(),
 })
 
 export const listCaregiversSchema = z.object({

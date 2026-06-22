@@ -89,8 +89,10 @@ export async function createPatient(data: CreatePatientInput) {
       })
     }
 
-    // Create patient without a login account
-    return prisma.patient.create({
+    // Create patient without a login account.
+    // `await` is required so a duplicate-documentId (P2002) is caught below and
+    // mapped to a 409 instead of escaping as an unhandled 500.
+    return await prisma.patient.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,

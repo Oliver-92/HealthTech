@@ -10,8 +10,11 @@ export function validate(schema: ZodSchema, target: Target = 'body') {
       next(result.error)
       return
     }
-    // Express 5 makes req.query read-only; body and params are plain objects
-    if (target !== 'query') {
+    // Express 5 makes req.query read-only, so the coerced/validated data is
+    // exposed on req.validatedQuery instead. body and params are reassigned in place.
+    if (target === 'query') {
+      req.validatedQuery = result.data
+    } else {
       req[target] = result.data
     }
     next()

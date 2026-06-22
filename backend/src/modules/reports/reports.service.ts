@@ -43,6 +43,11 @@ export async function approveReport(id: number, adminUserId: number) {
     throw ApiError.badRequest(`Only SUBMITTED reports can be approved (current: ${report.status})`)
   }
 
+  // A report on a cancelled / no-show shift must not silently revive it to COMPLETED
+  if (report.shift.status === 'CANCELLED' || report.shift.status === 'NO_SHOW') {
+    throw ApiError.badRequest(`Cannot approve a report for a ${report.shift.status} shift`)
+  }
+
   // Approve report and set shift to COMPLETED in a single transaction
   return prisma.$transaction(async (tx) => {
     const updated = await tx.report.update({
@@ -174,9 +179,11 @@ export async function listMyReports(caregiverId: number, filters: ListReportsQue
   })
 }
 
-export async function listPatientReports(patientId: number, filters: ListReportsQuery) {
+export async function listPatientReports(patientId: number, _filters: ListReportsQuery) {
+  // Family members (PATIENT role) may only see APPROVED reports — never drafts,
+  // submitted-but-unreviewed, or rejected ones (which would leak internal notes).
   return prisma.report.findMany({
-    where: { patientId, ...(filters.status && { status: filters.status }) },
+    where: { patientId, status: 'APPROVED' },
     include: reportInclude,
     orderBy: { createdAt: 'desc' },
   })

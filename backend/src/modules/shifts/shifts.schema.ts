@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { dateString } from '../../utils/schemas.js'
 
 const TIME_RE = /^\d{2}:\d{2}$/
 
@@ -6,7 +7,7 @@ export const createShiftSchema = z
   .object({
     patientId: z.number().int().positive('patientId must be a positive integer'),
     caregiverId: z.number().int().positive('caregiverId must be a positive integer'),
-    date: z.string().min(1, 'date is required'),
+    date: dateString,
     startTime: z.string().regex(TIME_RE, 'startTime must be HH:MM'),
     endTime: z.string().regex(TIME_RE, 'endTime must be HH:MM'),
   })
@@ -19,7 +20,7 @@ export const updateShiftSchema = z
   .object({
     patientId: z.number().int().positive().optional(),
     caregiverId: z.number().int().positive().optional(),
-    date: z.string().optional(),
+    date: dateString.optional(),
     startTime: z.string().regex(TIME_RE, 'startTime must be HH:MM').optional(),
     endTime: z.string().regex(TIME_RE, 'endTime must be HH:MM').optional(),
   })
@@ -39,14 +40,14 @@ export const listShiftsSchema = z.object({
   caregiverId: z.coerce.number().int().positive().optional(),
   patientId: z.coerce.number().int().positive().optional(),
   status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
-  from: z.string().optional(),
-  to: z.string().optional(),
+  from: dateString.optional(),
+  to: dateString.optional(),
 })
 
 export const listMyShiftsSchema = z.object({
   status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
-  from: z.string().optional(),
-  to: z.string().optional(),
+  from: dateString.optional(),
+  to: dateString.optional(),
 })
 
 export type CreateShiftInput = z.infer<typeof createShiftSchema>

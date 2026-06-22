@@ -130,3 +130,15 @@ export async function deactivateCaregiver(id: number) {
     return caregiver
   })
 }
+
+// Resolve the Caregiver row id from an authenticated user's id (JWT sub).
+// Used by self-service endpoints (/api/me/...) where the caregiverId is derived
+// from the token, never from a client-supplied parameter.
+export async function getCaregiverIdByUserId(userId: number): Promise<number> {
+  const caregiver = await prisma.caregiver.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  if (!caregiver) throw ApiError.notFound('Caregiver profile not found for this user')
+  return caregiver.id
+}

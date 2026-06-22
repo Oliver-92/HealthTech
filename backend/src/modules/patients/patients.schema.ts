@@ -1,11 +1,12 @@
 import { z } from 'zod'
+import { dateString } from '../../utils/schemas.js'
 
 export const createPatientSchema = z
   .object({
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
     documentId: z.string().min(1, 'Document ID is required'),
-    birthDate: z.string().optional(),
+    birthDate: dateString.optional(),
     address: z.string().optional(),
     phone: z.string().optional(),
     emergencyContact: z.string().optional(),
