@@ -3,6 +3,7 @@ import cors from 'cors'
 import { env } from './config/env.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 import healthRouter from './modules/health/health.routes.js'
+import authRouter from './modules/auth/auth.routes.js'
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use(express.json())
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/health', healthRouter)
+app.use('/api/auth', authRouter)
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {
