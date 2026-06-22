@@ -60,11 +60,12 @@ HealtTech es una plataforma web diseñada para gestionar integralmente servicios
 │       └── package.json
 ├── backend/
 │   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/team19/CareConnect/
-│   │   │   └── resources/      # Configuración y migrations SQL
-│   │   └── test/
-│   └── pom.xml
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── services/
+│   │   └── index.ts/
+│   └── package.json
 └── README.md
 ```
 
