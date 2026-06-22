@@ -18,7 +18,7 @@ El objetivo es digitalizar y centralizar toda la operación en una única aplica
 - **Lucide React** (íconos)
 - **React Toastify** (notificaciones)
 
-El backend será desarrollado en **Java** y expone APIs REST.
+El backend será desarrollado en **Node** y expone APIs REST.
 
 ---
 

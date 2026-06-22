@@ -1,4 +1,20 @@
-# node_molues
+# Dependencies
 frontend/node_modules
 backend/node_modules
+
+# Build output
+backend/dist
+
+# Environment variables (never commit real secrets)
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Docs (generated / private)
 backend/DOCS
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
