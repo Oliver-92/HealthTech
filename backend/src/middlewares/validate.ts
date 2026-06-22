@@ -10,8 +10,10 @@ export function validate(schema: ZodSchema, target: Target = 'body') {
       next(result.error)
       return
     }
-    // Replace with parsed (coerced + stripped) data
-    req[target] = result.data
+    // Express 5 makes req.query read-only; body and params are plain objects
+    if (target !== 'query') {
+      req[target] = result.data
+    }
     next()
   }
 }
