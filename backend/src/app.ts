@@ -6,6 +6,7 @@ import healthRouter from './modules/health/health.routes.js'
 import authRouter from './modules/auth/auth.routes.js'
 import caregiversRouter from './modules/caregivers/caregivers.routes.js'
 import patientsRouter from './modules/patients/patients.routes.js'
+import { adminRouter as shiftsRouter, meRouter as meShiftsRouter } from './modules/shifts/shifts.routes.js'
 
 const app = express()
 
@@ -23,6 +24,8 @@ app.use('/api/health', healthRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/caregivers', caregiversRouter)
 app.use('/api/patients', patientsRouter)
+app.use('/api/shifts', shiftsRouter)
+app.use('/api/me/shifts', meShiftsRouter)
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {
