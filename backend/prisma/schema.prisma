@@ -146,9 +146,10 @@ model Report {
   observations  String?
   medication    String?
   vitalSigns    String?      @map("vital_signs")
-  status        ReportStatus @default(DRAFT)
-  reviewedById  Int?         @map("reviewed_by_id")
-  reviewedAt    DateTime?    @map("reviewed_at")
+  status          ReportStatus @default(DRAFT)
+  rejectionReason String?      @map("rejection_reason")
+  reviewedById    Int?         @map("reviewed_by_id")
+  reviewedAt      DateTime?    @map("reviewed_at")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 

@@ -80,10 +80,8 @@ export async function rejectReport(id: number, adminUserId: number, { reason }: 
     where: { id },
     data: {
       status: 'REJECTED',
-      // Store rejection reason in observations for the caregiver to see
-      observations: report.observations
-        ? `[REJECTED: ${reason}]\n${report.observations}`
-        : `[REJECTED: ${reason}]`,
+      // Stored in a dedicated field — never mixed into the caregiver's observations
+      rejectionReason: reason,
       reviewedById: adminUserId,
       reviewedAt: new Date(),
     },
@@ -149,6 +147,8 @@ export async function updateReport(id: number, caregiverId: number, data: Update
       ...(data.vitalSigns !== undefined && { vitalSigns: data.vitalSigns }),
       // Editing a rejected report sets it back to DRAFT for re-review
       status: 'DRAFT',
+      // Clear the previous rejection reason now that it is being reworked
+      rejectionReason: null,
     },
     include: reportInclude,
   })
