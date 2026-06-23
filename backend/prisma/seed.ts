@@ -1,6 +1,14 @@
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient, Role, ShiftStatus, ReportStatus } from '../src/generated/prisma/client.js'
+import {
+  PrismaClient,
+  Role,
+  ShiftStatus,
+  ReportStatus,
+  PaymentReportStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '../src/generated/prisma/client.js'
 import bcrypt from 'bcrypt'
 import 'dotenv/config'
 
@@ -8,9 +16,29 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 const SALT_ROUNDS = 10
+const HOURLY_RATE = 1500
+const amountFor = (mins: number) => (mins / 60) * HOURLY_RATE
+
+// ── Date helpers (UTC, aligned with @db.Date columns) ─────────────────────────
+const now = new Date()
+const utcDay = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d))
+const today = utcDay(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+const yesterday = utcDay(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1)
+const tomorrow = utcDay(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
+// Previous month, for a closed-ish payroll period with billable (approved) work
+const lastMonthStart = utcDay(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)
+const lastMonthEnd = utcDay(now.getUTCFullYear(), now.getUTCMonth(), 0)
+const lmDay = (d: number) => utcDay(lastMonthStart.getUTCFullYear(), lastMonthStart.getUTCMonth(), d)
 
 async function main() {
   console.log('🌱  Seeding database...')
+
+  // Reset transactional data so the seed is re-runnable (respect FK order)
+  await prisma.payment.deleteMany()
+  await prisma.paymentReport.deleteMany()
+  await prisma.payrollPeriod.deleteMany()
+  await prisma.report.deleteMany()
+  await prisma.shift.deleteMany()
 
   // ── Admin ────────────────────────────────────────────────────────────────
   const adminUser = await prisma.user.upsert({
@@ -46,7 +74,7 @@ async function main() {
       lastName: 'López',
       documentId: '30111222',
       phone: '11-4444-5555',
-      hourlyRate: 1500.0,
+      hourlyRate: HOURLY_RATE,
       hiredAt: new Date('2024-03-01'),
     },
   })
@@ -71,14 +99,13 @@ async function main() {
       lastName: 'Pérez',
       documentId: '28333444',
       phone: '11-5555-6666',
-      hourlyRate: 1500.0,
+      hourlyRate: HOURLY_RATE,
       hiredAt: new Date('2024-06-15'),
     },
   })
   console.log(`✅  Caregivers: ${caregiver1.firstName} ${caregiver1.lastName}, ${caregiver2.firstName} ${caregiver2.lastName}`)
 
   // ── Patients ──────────────────────────────────────────────────────────────
-  // Patient with family login
   const patientUser = await prisma.user.upsert({
     where: { email: 'familia.garcia@healthtech.com' },
     update: {},
@@ -106,7 +133,6 @@ async function main() {
     },
   })
 
-  // Patient without login account
   const patient2 = await prisma.patient.upsert({
     where: { documentId: '12777888' },
     update: {},
@@ -123,88 +149,121 @@ async function main() {
   })
   console.log(`✅  Patients: ${patient1.firstName} ${patient1.lastName}, ${patient2.firstName} ${patient2.lastName}`)
 
-  // ── Shifts ────────────────────────────────────────────────────────────────
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // ── Last month: completed shifts with APPROVED reports (billable) ──────────
+  const SHIFT_MINUTES = 360 // 08:00–14:00
+  async function completedShiftWithApprovedReport(
+    date: Date,
+    caregiverId: number,
+    patientId: number,
+  ) {
+    const shift = await prisma.shift.create({
+      data: { patientId, caregiverId, date, startTime: '08:00', endTime: '14:00', status: ShiftStatus.COMPLETED },
+    })
+    await prisma.report.create({
+      data: {
+        shiftId: shift.id,
+        caregiverId,
+        patientId,
+        workedMinutes: SHIFT_MINUTES,
+        observations: 'Paciente estable. Sin novedades.',
+        medication: 'Medicación administrada según pauta.',
+        vitalSigns: 'TA: 130/80 mmHg. FC: 72 lpm.',
+        status: ReportStatus.APPROVED,
+        reviewedById: adminUser.id,
+        reviewedAt: new Date(),
+      },
+    })
+  }
 
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
+  // María: 2 approved shifts (720 min); Carlos: 1 approved shift (360 min)
+  await completedShiftWithApprovedReport(lmDay(5), caregiver1.id, patient1.id)
+  await completedShiftWithApprovedReport(lmDay(12), caregiver1.id, patient1.id)
+  await completedShiftWithApprovedReport(lmDay(18), caregiver2.id, patient2.id)
+  const mariaMinutes = SHIFT_MINUTES * 2
+  const carlosMinutes = SHIFT_MINUTES
+  console.log('✅  Last-month work: 3 completed shifts with APPROVED reports')
 
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-
-  const shift1 = await prisma.shift.create({
-    data: {
-      patientId: patient1.id,
-      caregiverId: caregiver1.id,
-      date: yesterday,
-      startTime: '08:00',
-      endTime: '14:00',
-      status: ShiftStatus.COMPLETED,
-    },
+  // ── Recent: completed shifts with SUBMITTED reports (pending admin review) ──
+  const shiftRecent1 = await prisma.shift.create({
+    data: { patientId: patient1.id, caregiverId: caregiver1.id, date: yesterday, startTime: '08:00', endTime: '14:00', status: ShiftStatus.COMPLETED },
   })
-
-  const shift2 = await prisma.shift.create({
-    data: {
-      patientId: patient2.id,
-      caregiverId: caregiver2.id,
-      date: yesterday,
-      startTime: '14:00',
-      endTime: '20:00',
-      status: ShiftStatus.COMPLETED,
-    },
-  })
-
-  await prisma.shift.create({
-    data: {
-      patientId: patient1.id,
-      caregiverId: caregiver1.id,
-      date: today,
-      startTime: '08:00',
-      endTime: '14:00',
-      status: ShiftStatus.SCHEDULED,
-    },
-  })
-
-  await prisma.shift.create({
-    data: {
-      patientId: patient2.id,
-      caregiverId: caregiver2.id,
-      date: tomorrow,
-      startTime: '14:00',
-      endTime: '20:00',
-      status: ShiftStatus.SCHEDULED,
-    },
-  })
-  console.log('✅  Shifts: 4 created (2 completed, 2 scheduled)')
-
-  // ── Reports ───────────────────────────────────────────────────────────────
   await prisma.report.create({
     data: {
-      shiftId: shift1.id,
+      shiftId: shiftRecent1.id,
       caregiverId: caregiver1.id,
       patientId: patient1.id,
       workedMinutes: 360,
-      observations: 'Paciente estable. Realizó ejercicios de movilidad sin inconvenientes.',
-      medication: 'Enalapril 10mg — tomado a las 08:30. Aspirina 100mg — tomada a las 09:00.',
-      vitalSigns: 'TA: 130/80 mmHg. FC: 72 lpm. Temperatura: 36.5°C.',
+      observations: 'Paciente con ánimo positivo. Realizó ejercicios de movilidad.',
+      medication: 'Enalapril 10mg a las 08:30.',
+      vitalSigns: 'TA: 128/82 mmHg. FC: 70 lpm.',
       status: ReportStatus.SUBMITTED,
     },
   })
 
+  const shiftRecent2 = await prisma.shift.create({
+    data: { patientId: patient2.id, caregiverId: caregiver2.id, date: yesterday, startTime: '14:00', endTime: '20:00', status: ShiftStatus.COMPLETED },
+  })
   await prisma.report.create({
     data: {
-      shiftId: shift2.id,
+      shiftId: shiftRecent2.id,
       caregiverId: caregiver2.id,
       patientId: patient2.id,
       workedMinutes: 360,
-      observations: 'Paciente con ánimo positivo. Almorzó bien y descansó luego.',
+      observations: 'Almorzó bien y descansó. Sin inconvenientes.',
       medication: 'Medicación tomada a las 20:00 según pauta.',
-      vitalSigns: 'TA: 125/75 mmHg. FC: 68 lpm. Temperatura: 36.2°C.',
+      vitalSigns: 'TA: 125/75 mmHg. FC: 68 lpm.',
       status: ReportStatus.SUBMITTED,
     },
   })
-  console.log('✅  Reports: 2 submitted (pending admin review)')
+  console.log('✅  Recent work: 2 completed shifts with SUBMITTED reports (pending review)')
+
+  // ── Upcoming scheduled shifts ──────────────────────────────────────────────
+  await prisma.shift.create({
+    data: { patientId: patient1.id, caregiverId: caregiver1.id, date: today, startTime: '08:00', endTime: '14:00', status: ShiftStatus.SCHEDULED },
+  })
+  await prisma.shift.create({
+    data: { patientId: patient2.id, caregiverId: caregiver2.id, date: tomorrow, startTime: '14:00', endTime: '20:00', status: ShiftStatus.SCHEDULED },
+  })
+  console.log('✅  Upcoming: 2 scheduled shifts')
+
+  // ── Billing: payroll period + liquidations + one completed payment ─────────
+  const period = await prisma.payrollPeriod.create({
+    data: { month: lastMonthStart, startDate: lastMonthStart, endDate: lastMonthEnd, isOpen: true },
+  })
+
+  // María's liquidation is already paid; Carlos's is generated and pending payment
+  const mariaReport = await prisma.paymentReport.create({
+    data: {
+      payrollPeriodId: period.id,
+      caregiverId: caregiver1.id,
+      totalTimeMins: mariaMinutes,
+      totalAmount: amountFor(mariaMinutes),
+      status: PaymentReportStatus.PAID,
+    },
+  })
+  await prisma.paymentReport.create({
+    data: {
+      payrollPeriodId: period.id,
+      caregiverId: caregiver2.id,
+      totalTimeMins: carlosMinutes,
+      totalAmount: amountFor(carlosMinutes),
+      status: PaymentReportStatus.GENERATED,
+    },
+  })
+
+  await prisma.payment.create({
+    data: {
+      paymentReportId: mariaReport.id,
+      paymentMethod: PaymentMethod.BANK_TRANSFER,
+      paymentStatus: PaymentStatus.COMPLETED,
+      initiatedAt: new Date(),
+      completedAt: new Date(),
+      transactionReference: 'SEED-TRANSFER-0001',
+    },
+  })
+  console.log(
+    `✅  Billing: period ${period.id} — María $${amountFor(mariaMinutes)} (PAID), Carlos $${amountFor(carlosMinutes)} (pending)`,
+  )
 
   console.log('\n🎉  Seed complete!\n')
   console.log('  Credentials:')
