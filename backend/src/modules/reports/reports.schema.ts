@@ -5,6 +5,8 @@ export const createReportSchema = z.object({
   observations: z.string().optional(),
   medication: z.string().optional(),
   vitalSigns: z.string().optional(),
+  // false (default) → save as DRAFT; true → submit immediately for admin review
+  submit: z.boolean().optional().default(false),
 })
 
 // Caregiver edits a DRAFT or re-edits a REJECTED report

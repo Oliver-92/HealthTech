@@ -24,6 +24,25 @@ const shiftInclude = {
   report: { select: { id: true, status: true } },
 } satisfies Prisma.ShiftInclude
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+// Combine a @db.Date (midnight UTC) with an "HH:MM" string into an absolute UTC instant.
+function combine(date: Date, time: string): Date {
+  const [h, m] = time.split(':').map(Number)
+  const d = new Date(date)
+  d.setUTCHours(h, m, 0, 0)
+  return d
+}
+
+// Absolute [start, end) interval for a shift. When endTime <= startTime the shift
+// crosses midnight, so the end rolls over into the next day.
+function toInterval(date: Date, startTime: string, endTime: string): [Date, Date] {
+  const start = combine(date, startTime)
+  const end = combine(date, endTime)
+  if (endTime <= startTime) end.setTime(end.getTime() + DAY_MS)
+  return [start, end]
+}
+
 async function assertCaregiverOverlap(
   caregiverId: number,
   date: Date,
@@ -31,20 +50,26 @@ async function assertCaregiverOverlap(
   endTime: string,
   excludeId?: number,
 ) {
-  const overlap = await prisma.shift.findFirst({
+  const [candStart, candEnd] = toInterval(date, startTime, endTime)
+
+  // A night shift can spill into the adjacent day, so scan date ± 1 and compare
+  // absolute instants instead of HH:MM strings tied to a single calendar date.
+  const existing = await prisma.shift.findMany({
     where: {
       caregiverId,
-      date,
+      date: { gte: new Date(date.getTime() - DAY_MS), lte: new Date(date.getTime() + DAY_MS) },
       status: { notIn: ['CANCELLED', 'NO_SHOW'] },
       ...(excludeId && { id: { not: excludeId } }),
-      AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
     },
   })
 
-  if (overlap) {
-    throw ApiError.conflict(
-      `Caregiver already has a shift on this date from ${overlap.startTime} to ${overlap.endTime}`,
-    )
+  for (const s of existing) {
+    const [sStart, sEnd] = toInterval(s.date, s.startTime, s.endTime)
+    if (candStart < sEnd && candEnd > sStart) {
+      throw ApiError.conflict(
+        `Caregiver already has a shift overlapping this time (${s.date.toISOString().slice(0, 10)} ${s.startTime}–${s.endTime})`,
+      )
+    }
   }
 }
 
@@ -121,6 +146,11 @@ export async function updateShift(id: number, data: UpdateShiftInput) {
   const date = data.date ? new Date(data.date) : shift.date
   const startTime = data.startTime ?? shift.startTime
   const endTime = data.endTime ?? shift.endTime
+
+  // Validate the effective (merged) times — the schema only sees the request body
+  if (startTime === endTime) {
+    throw ApiError.badRequest('startTime and endTime must differ')
+  }
 
   if (data.caregiverId || data.date || data.startTime || data.endTime) {
     await assertCaregiverOverlap(caregiverId, date, startTime, endTime, id)

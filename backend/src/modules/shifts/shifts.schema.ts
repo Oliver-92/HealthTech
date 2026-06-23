@@ -11,8 +11,8 @@ export const createShiftSchema = z
     startTime: z.string().regex(TIME_RE, 'startTime must be HH:MM'),
     endTime: z.string().regex(TIME_RE, 'endTime must be HH:MM'),
   })
-  .refine((d) => d.startTime < d.endTime, {
-    message: 'startTime must be before endTime',
+  .refine((d) => d.startTime !== d.endTime, {
+    message: 'startTime and endTime must differ (a shift may cross midnight)',
     path: ['endTime'],
   })
 
@@ -26,10 +26,10 @@ export const updateShiftSchema = z
   })
   .refine(
     (d) => {
-      if (d.startTime && d.endTime) return d.startTime < d.endTime
+      if (d.startTime && d.endTime) return d.startTime !== d.endTime
       return true
     },
-    { message: 'startTime must be before endTime', path: ['endTime'] },
+    { message: 'startTime and endTime must differ', path: ['endTime'] },
   )
 
 export const updateShiftStatusSchema = z.object({

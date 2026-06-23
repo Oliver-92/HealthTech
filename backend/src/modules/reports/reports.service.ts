@@ -124,7 +124,8 @@ export async function createReport(
       observations: data.observations,
       medication: data.medication,
       vitalSigns: data.vitalSigns,
-      status: 'SUBMITTED',
+      // Caregiver can save a draft or submit directly for review
+      status: data.submit ? 'SUBMITTED' : 'DRAFT',
     },
     include: reportInclude,
   })
