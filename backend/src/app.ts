@@ -16,6 +16,7 @@ import {
   meReportsRouter,
 } from './modules/reports/reports.routes.js'
 import billingRouter from './modules/billing/billing.routes.js'
+import metricsRouter from './modules/metrics/metrics.routes.js'
 
 const app = express()
 
@@ -43,6 +44,7 @@ app.use('/api/me/shifts', meShiftsRouter)
 app.use('/api/reports', reportsRouter)
 app.use('/api/me/reports', meReportsRouter)
 app.use('/api/billing', billingRouter)
+app.use('/api/admin', metricsRouter)
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {
