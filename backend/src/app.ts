@@ -1,6 +1,9 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import { pinoHttp } from 'pino-http'
 import { env } from './config/env.js'
+import { logger } from './config/logger.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 import healthRouter from './modules/health/health.routes.js'
 import authRouter from './modules/auth/auth.routes.js'
@@ -16,13 +19,15 @@ import {
 const app = express()
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
+app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }))
+app.use(helmet())
 app.use(
   cors({
     origin: env.FRONTEND_URL,
     credentials: true,
   }),
 )
-app.use(express.json())
+app.use(express.json({ limit: '100kb' }))
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/health', healthRouter)

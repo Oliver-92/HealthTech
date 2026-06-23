@@ -2,13 +2,12 @@ import { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
 import { ApiError } from '../utils/ApiError.js'
 import { env } from '../config/env.js'
+import { logger } from '../config/logger.js'
 
-export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
+  // Response shape is always { message, errors } for a consistent client contract
   if (err instanceof ApiError) {
-    res.status(err.statusCode).json({
-      message: err.message,
-      ...(err.errors.length > 0 && { errors: err.errors }),
-    })
+    res.status(err.statusCode).json({ message: err.message, errors: err.errors })
     return
   }
 
@@ -18,10 +17,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return
   }
 
-  // Unexpected errors: log the stack in dev, hide details in prod
-  console.error(err)
+  // Unexpected errors: log full detail, never leak it to the client in prod
+  logger.error({ err }, 'Unhandled error')
   res.status(500).json({
     message: 'Internal server error',
+    errors: [],
     ...(env.NODE_ENV === 'development' && { detail: String(err) }),
   })
 }
