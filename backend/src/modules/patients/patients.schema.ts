@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { dateString } from '../../utils/schemas.js'
+import { paginationFields } from '../../utils/pagination.js'
 
 export const createPatientSchema = z
   .object({
@@ -33,6 +34,7 @@ export const updatePatientSchema = z.object({
 export const listPatientsSchema = z.object({
   q: z.string().optional(),
   isActive: z.enum(['true', 'false']).optional(),
+  ...paginationFields,
 })
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>

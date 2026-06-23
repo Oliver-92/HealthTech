@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { dateString } from '../../utils/schemas.js'
+import { paginationFields } from '../../utils/pagination.js'
 
 const TIME_RE = /^\d{2}:\d{2}$/
 
@@ -42,6 +43,7 @@ export const listShiftsSchema = z.object({
   status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
   from: dateString.optional(),
   to: dateString.optional(),
+  ...paginationFields,
 })
 
 export const listMyShiftsSchema = z.object({

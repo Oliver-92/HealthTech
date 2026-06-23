@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationFields } from '../../utils/pagination.js'
 
 export const createReportSchema = z.object({
   workedMinutes: z.number().int().positive('workedMinutes must be a positive integer'),
@@ -25,6 +26,7 @@ export const listReportsSchema = z.object({
   caregiverId: z.coerce.number().int().positive().optional(),
   patientId: z.coerce.number().int().positive().optional(),
   status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']).optional(),
+  ...paginationFields,
 })
 
 export const shiftIdParamSchema = z.object({

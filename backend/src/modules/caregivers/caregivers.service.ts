@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import { Prisma } from '../../generated/prisma/client.js'
 import { prisma } from '../../config/prisma.js'
 import { ApiError } from '../../utils/ApiError.js'
+import { getPaginationArgs } from '../../utils/pagination.js'
 import type {
   CreateCaregiverInput,
   UpdateCaregiverInput,
@@ -24,7 +25,12 @@ const caregiverSelect = {
   user: { select: { id: true, email: true } },
 } satisfies Prisma.CaregiverSelect
 
-export async function listCaregivers({ q, isActive }: ListCaregiversQuery) {
+// hourlyRate is a Prisma Decimal (serializes to a string); expose it as a plain number
+function serializeCaregiver<T extends { hourlyRate: Prisma.Decimal }>(c: T) {
+  return { ...c, hourlyRate: c.hourlyRate.toNumber() }
+}
+
+export async function listCaregivers({ q, isActive, page, pageSize }: ListCaregiversQuery) {
   const where: Prisma.CaregiverWhereInput = {}
 
   if (isActive !== undefined) {
@@ -40,11 +46,28 @@ export async function listCaregivers({ q, isActive }: ListCaregiversQuery) {
     ]
   }
 
-  return prisma.caregiver.findMany({
-    where,
-    select: caregiverSelect,
-    orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
-  })
+  const orderBy: Prisma.CaregiverOrderByWithRelationInput[] = [
+    { lastName: 'asc' },
+    { firstName: 'asc' },
+  ]
+  const pag = getPaginationArgs({ page, pageSize })
+
+  if (!pag) {
+    const all = await prisma.caregiver.findMany({ where, select: caregiverSelect, orderBy })
+    return all.map(serializeCaregiver)
+  }
+
+  const [rows, total] = await Promise.all([
+    prisma.caregiver.findMany({
+      where,
+      select: caregiverSelect,
+      orderBy,
+      skip: pag.skip,
+      take: pag.take,
+    }),
+    prisma.caregiver.count({ where }),
+  ])
+  return { data: rows.map(serializeCaregiver), total, page: pag.page, pageSize: pag.pageSize }
 }
 
 export async function getCaregiverById(id: number) {
@@ -54,14 +77,14 @@ export async function getCaregiverById(id: number) {
   })
 
   if (!caregiver) throw ApiError.notFound(`Caregiver #${id} not found`)
-  return caregiver
+  return serializeCaregiver(caregiver)
 }
 
 export async function createCaregiver(data: CreateCaregiverInput) {
   const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS)
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: data.email,
@@ -87,6 +110,7 @@ export async function createCaregiver(data: CreateCaregiverInput) {
 
       return user.caregiver
     })
+    return serializeCaregiver(created!)
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
       const fields = (e.meta?.modelName as string) === 'User' ? 'email' : 'document ID'
@@ -99,7 +123,7 @@ export async function createCaregiver(data: CreateCaregiverInput) {
 export async function updateCaregiver(id: number, data: UpdateCaregiverInput) {
   await getCaregiverById(id)
 
-  return prisma.caregiver.update({
+  const caregiver = await prisma.caregiver.update({
     where: { id },
     data: {
       ...(data.firstName && { firstName: data.firstName }),
@@ -110,25 +134,27 @@ export async function updateCaregiver(id: number, data: UpdateCaregiverInput) {
     },
     select: caregiverSelect,
   })
+  return serializeCaregiver(caregiver)
 }
 
 export async function deactivateCaregiver(id: number) {
   await getCaregiverById(id)
 
-  return prisma.$transaction(async (tx) => {
-    const caregiver = await tx.caregiver.update({
+  const caregiver = await prisma.$transaction(async (tx) => {
+    const updated = await tx.caregiver.update({
       where: { id },
       data: { isActive: false },
       select: { ...caregiverSelect, userId: true },
     })
 
     await tx.user.update({
-      where: { id: caregiver.userId },
+      where: { id: updated.userId },
       data: { isActive: false },
     })
 
-    return caregiver
+    return updated
   })
+  return serializeCaregiver(caregiver)
 }
 
 // Resolve the Caregiver row id from an authenticated user's id (JWT sub).

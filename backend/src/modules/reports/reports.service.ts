@@ -1,6 +1,7 @@
 import { Prisma } from '../../generated/prisma/client.js'
 import { prisma } from '../../config/prisma.js'
 import { ApiError } from '../../utils/ApiError.js'
+import { getPaginationArgs } from '../../utils/pagination.js'
 import type {
   CreateReportInput,
   UpdateReportInput,
@@ -23,11 +24,18 @@ export async function listReports(filters: ListReportsQuery) {
   if (filters.patientId) where.patientId = filters.patientId
   if (filters.status) where.status = filters.status
 
-  return prisma.report.findMany({
-    where,
-    include: reportInclude,
-    orderBy: { createdAt: 'desc' },
-  })
+  const orderBy: Prisma.ReportOrderByWithRelationInput = { createdAt: 'desc' }
+  const pag = getPaginationArgs(filters)
+
+  if (!pag) {
+    return prisma.report.findMany({ where, include: reportInclude, orderBy })
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.report.findMany({ where, include: reportInclude, orderBy, skip: pag.skip, take: pag.take }),
+    prisma.report.count({ where }),
+  ])
+  return { data, total, page: pag.page, pageSize: pag.pageSize }
 }
 
 export async function getReportById(id: number) {

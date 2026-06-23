@@ -1,6 +1,7 @@
 import { Prisma, ShiftStatus } from '../../generated/prisma/client.js'
 import { prisma } from '../../config/prisma.js'
 import { ApiError } from '../../utils/ApiError.js'
+import { getPaginationArgs } from '../../utils/pagination.js'
 import type {
   CreateShiftInput,
   UpdateShiftInput,
@@ -98,11 +99,18 @@ export async function listShifts(filters: ListShiftsQuery) {
     }
   }
 
-  return prisma.shift.findMany({
-    where,
-    include: shiftInclude,
-    orderBy: [{ date: 'desc' }, { startTime: 'asc' }],
-  })
+  const orderBy: Prisma.ShiftOrderByWithRelationInput[] = [{ date: 'desc' }, { startTime: 'asc' }]
+  const pag = getPaginationArgs(filters)
+
+  if (!pag) {
+    return prisma.shift.findMany({ where, include: shiftInclude, orderBy })
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.shift.findMany({ where, include: shiftInclude, orderBy, skip: pag.skip, take: pag.take }),
+    prisma.shift.count({ where }),
+  ])
+  return { data, total, page: pag.page, pageSize: pag.pageSize }
 }
 
 export async function getShiftById(id: number) {

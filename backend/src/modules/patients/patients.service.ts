@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import { Prisma } from '../../generated/prisma/client.js'
 import { prisma } from '../../config/prisma.js'
 import { ApiError } from '../../utils/ApiError.js'
+import { getPaginationArgs } from '../../utils/pagination.js'
 import type {
   CreatePatientInput,
   UpdatePatientInput,
@@ -25,7 +26,7 @@ const patientSelect = {
   user: { select: { id: true, email: true } },
 } satisfies Prisma.PatientSelect
 
-export async function listPatients({ q, isActive }: ListPatientsQuery) {
+export async function listPatients({ q, isActive, page, pageSize }: ListPatientsQuery) {
   const where: Prisma.PatientWhereInput = {}
 
   if (isActive !== undefined) {
@@ -40,11 +41,21 @@ export async function listPatients({ q, isActive }: ListPatientsQuery) {
     ]
   }
 
-  return prisma.patient.findMany({
-    where,
-    select: patientSelect,
-    orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
-  })
+  const orderBy: Prisma.PatientOrderByWithRelationInput[] = [
+    { lastName: 'asc' },
+    { firstName: 'asc' },
+  ]
+  const pag = getPaginationArgs({ page, pageSize })
+
+  if (!pag) {
+    return prisma.patient.findMany({ where, select: patientSelect, orderBy })
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.patient.findMany({ where, select: patientSelect, orderBy, skip: pag.skip, take: pag.take }),
+    prisma.patient.count({ where }),
+  ])
+  return { data, total, page: pag.page, pageSize: pag.pageSize }
 }
 
 export async function getPatientById(id: number) {

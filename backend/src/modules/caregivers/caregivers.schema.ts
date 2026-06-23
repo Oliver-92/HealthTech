@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { dateString } from '../../utils/schemas.js'
+import { paginationFields } from '../../utils/pagination.js'
 
 export const createCaregiverSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,6 +24,7 @@ export const updateCaregiverSchema = z.object({
 export const listCaregiversSchema = z.object({
   q: z.string().optional(),
   isActive: z.enum(['true', 'false']).optional(),
+  ...paginationFields,
 })
 
 export type CreateCaregiverInput = z.infer<typeof createCaregiverSchema>
