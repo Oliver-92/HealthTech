@@ -34,7 +34,7 @@ export function Navbar() {
         type="button"
         onClick={toggleSidebar}
         aria-label="Abrir menú"
-        className="p-2 rounded-[--radius] text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+        className="md:hidden p-2 rounded-[--radius] text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
       >
         <Menu size={20} />
       </button>
