@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { roleHome } from '@/constants/roles'
 import { ProtectedRoute } from './ProtectedRoute'
+import { DashboardLayout } from '@/components/layout'
 
 import { Login } from '@/pages/Login'
 import { AdminDashboard } from '@/pages/admin/Dashboard'
@@ -44,28 +45,34 @@ export function AppRouter() {
         {/* Público */}
         <Route path="/login" element={<Login />} />
 
-        {/* ADMIN */}
+        {/* ADMIN — autenticado + layout */}
         <Route element={<ProtectedRoute roles={['ADMIN']} />}>
-          <Route path="/admin/dashboard"  element={<AdminDashboard />} />
-          <Route path="/admin/caregivers" element={<Caregivers />} />
-          <Route path="/admin/patients"   element={<Patients />} />
-          <Route path="/admin/shifts"     element={<Shifts />} />
-          <Route path="/admin/reports"    element={<Reports />} />
-          <Route path="/admin/billing"    element={<Billing />} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/admin/dashboard"  element={<AdminDashboard />} />
+            <Route path="/admin/caregivers" element={<Caregivers />} />
+            <Route path="/admin/patients"   element={<Patients />} />
+            <Route path="/admin/shifts"     element={<Shifts />} />
+            <Route path="/admin/reports"    element={<Reports />} />
+            <Route path="/admin/billing"    element={<Billing />} />
+          </Route>
         </Route>
 
-        {/* CAREGIVER */}
+        {/* CAREGIVER — autenticado + layout */}
         <Route element={<ProtectedRoute roles={['CAREGIVER']} />}>
-          <Route path="/caregiver/dashboard"          element={<CaregiverDashboard />} />
-          <Route path="/caregiver/shifts"             element={<MyShifts />} />
-          <Route path="/caregiver/reports"            element={<MyReports />} />
-          <Route path="/caregiver/reports/:shiftId"   element={<UploadReport />} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/caregiver/dashboard"        element={<CaregiverDashboard />} />
+            <Route path="/caregiver/shifts"           element={<MyShifts />} />
+            <Route path="/caregiver/reports"          element={<MyReports />} />
+            <Route path="/caregiver/reports/:shiftId" element={<UploadReport />} />
+          </Route>
         </Route>
 
-        {/* PATIENT */}
+        {/* PATIENT — autenticado + layout */}
         <Route element={<ProtectedRoute roles={['PATIENT']} />}>
-          <Route path="/patient/dashboard" element={<PatientDashboard />} />
-          <Route path="/patient/reports"   element={<PatientReports />} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/patient/dashboard" element={<PatientDashboard />} />
+            <Route path="/patient/reports"   element={<PatientReports />} />
+          </Route>
         </Route>
 
         {/* Raíz y 404 */}
