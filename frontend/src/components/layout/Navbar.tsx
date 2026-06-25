@@ -40,7 +40,7 @@ export function Navbar() {
       </button>
 
       {/* Derecha */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 ml-auto">
         {/* Info del usuario */}
         {user && (
           <div className="hidden sm:flex items-center gap-2">
