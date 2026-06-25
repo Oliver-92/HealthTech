@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Modal, Button, Input, Textarea } from '@/components/common'
 import { createPatientSchema, updatePatientSchema } from '@/validations/patientSchema'
 import { dateInput } from '@/utils/formatDate'
@@ -46,17 +46,13 @@ function fromPatient(p: Patient): FormState {
   }
 }
 
+// Rendered with a key that changes on each open so useState initializes fresh.
 export function PatientFormModal({ open, mode, initial, onClose, onSubmit }: Props) {
-  const [form, setForm]     = useState<FormState>(EMPTY)
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
+  const [form, setForm]       = useState<FormState>(() =>
+    mode === 'edit' && initial ? fromPatient(initial) : EMPTY
+  )
+  const [errors, setErrors]   = useState<Partial<Record<keyof FormState, string>>>({})
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (open) {
-      setForm(mode === 'edit' && initial ? fromPatient(initial) : EMPTY)
-      setErrors({})
-    }
-  }, [open, mode, initial])
 
   const set = (field: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Modal, Button, Input } from '@/components/common'
 import { createCaregiverSchema, updateCaregiverSchema } from '@/validations/caregiverSchema'
 import { dateInput } from '@/utils/formatDate'
@@ -41,18 +41,13 @@ function fromCaregiver(c: Caregiver): FormState {
   }
 }
 
+// Rendered with a key that changes on each open so useState initializes fresh.
 export function CaregiverFormModal({ open, mode, initial, onClose, onSubmit }: Props) {
-  const [form, setForm]       = useState<FormState>(EMPTY)
+  const [form, setForm]       = useState<FormState>(() =>
+    mode === 'edit' && initial ? fromCaregiver(initial) : EMPTY
+  )
   const [errors, setErrors]   = useState<Partial<Record<keyof FormState, string>>>({})
   const [loading, setLoading] = useState(false)
-
-  // Reset on open/close
-  useEffect(() => {
-    if (open) {
-      setForm(mode === 'edit' && initial ? fromCaregiver(initial) : EMPTY)
-      setErrors({})
-    }
-  }, [open, mode, initial])
 
   const set = (field: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {

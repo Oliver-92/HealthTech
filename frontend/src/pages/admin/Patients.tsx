@@ -67,19 +67,23 @@ export function Patients() {
     },
     { key: 'documentId', header: 'Documento' },
     {
-      key: 'email',
-      header: 'Email',
-      render: (p) => p.user?.email ?? '—',
-    },
-    {
       key: 'birthDate',
-      header: 'Nacimiento',
+      header: 'Nac.',
       render: (p) => p.birthDate ? formatDate(p.birthDate) : '—',
     },
     {
       key: 'phone',
       header: 'Teléfono',
       render: (p) => p.phone ?? '—',
+    },
+    {
+      key: 'login',
+      header: 'Login',
+      render: (p) => (
+        <Badge variant={p.user ? 'success' : 'default'}>
+          {p.user ? 'Sí' : 'No'}
+        </Badge>
+      ),
     },
     {
       key: 'isActive',
@@ -155,6 +159,7 @@ export function Patients() {
       )}
 
       <PatientFormModal
+        key={modalOpen ? `${modalMode}-${selected?.id ?? 'new'}` : 'closed'}
         open={modalOpen}
         mode={modalMode}
         initial={selected}

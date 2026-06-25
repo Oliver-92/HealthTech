@@ -161,6 +161,7 @@ export function Caregivers() {
       )}
 
       <CaregiverFormModal
+        key={modalOpen ? `${modalMode}-${selected?.id ?? 'new'}` : 'closed'}
         open={modalOpen}
         mode={modalMode}
         initial={selected}
