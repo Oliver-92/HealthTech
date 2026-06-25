@@ -33,7 +33,7 @@ export const caregiverServiceMock = {
 
   create: async (dto: CreateCaregiverDto): Promise<Caregiver> => {
     await delay()
-    return {
+    const newItem: Caregiver = {
       id: Date.now(),
       firstName: dto.firstName,
       lastName: dto.lastName,
@@ -45,19 +45,23 @@ export const caregiverServiceMock = {
       createdAt: new Date().toISOString(),
       user: { id: Date.now(), email: dto.email },
     }
+    MOCK_CAREGIVERS.push(newItem)
+    return newItem
   },
 
   update: async (id: number, dto: UpdateCaregiverDto): Promise<Caregiver> => {
     await delay()
-    const found = MOCK_CAREGIVERS.find((c) => c.id === id)
-    if (!found) throw new Error('Cuidador no encontrado')
-    return { ...found, ...dto }
+    const idx = MOCK_CAREGIVERS.findIndex((c) => c.id === id)
+    if (idx === -1) throw new Error('Cuidador no encontrado')
+    MOCK_CAREGIVERS[idx] = { ...MOCK_CAREGIVERS[idx], ...dto }
+    return MOCK_CAREGIVERS[idx]
   },
 
   deactivate: async (id: number): Promise<Caregiver> => {
     await delay()
-    const found = MOCK_CAREGIVERS.find((c) => c.id === id)
-    if (!found) throw new Error('Cuidador no encontrado')
-    return { ...found, isActive: false }
+    const idx = MOCK_CAREGIVERS.findIndex((c) => c.id === id)
+    if (idx === -1) throw new Error('Cuidador no encontrado')
+    MOCK_CAREGIVERS[idx] = { ...MOCK_CAREGIVERS[idx], isActive: false }
+    return MOCK_CAREGIVERS[idx]
   },
 }

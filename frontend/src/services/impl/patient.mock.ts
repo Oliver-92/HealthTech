@@ -33,7 +33,7 @@ export const patientServiceMock = {
 
   create: async (dto: CreatePatientDto): Promise<Patient> => {
     await delay()
-    return {
+    const newItem: Patient = {
       id: Date.now(),
       firstName: dto.firstName,
       lastName: dto.lastName,
@@ -47,19 +47,23 @@ export const patientServiceMock = {
       createdAt: new Date().toISOString(),
       user: dto.email ? { id: Date.now(), email: dto.email } : null,
     }
+    MOCK_PATIENTS.push(newItem)
+    return newItem
   },
 
   update: async (id: number, dto: UpdatePatientDto): Promise<Patient> => {
     await delay()
-    const found = MOCK_PATIENTS.find((p) => p.id === id)
-    if (!found) throw new Error('Paciente no encontrado')
-    return { ...found, ...dto }
+    const idx = MOCK_PATIENTS.findIndex((p) => p.id === id)
+    if (idx === -1) throw new Error('Paciente no encontrado')
+    MOCK_PATIENTS[idx] = { ...MOCK_PATIENTS[idx], ...dto }
+    return MOCK_PATIENTS[idx]
   },
 
   deactivate: async (id: number): Promise<Patient> => {
     await delay()
-    const found = MOCK_PATIENTS.find((p) => p.id === id)
-    if (!found) throw new Error('Paciente no encontrado')
-    return { ...found, isActive: false }
+    const idx = MOCK_PATIENTS.findIndex((p) => p.id === id)
+    if (idx === -1) throw new Error('Paciente no encontrado')
+    MOCK_PATIENTS[idx] = { ...MOCK_PATIENTS[idx], isActive: false }
+    return MOCK_PATIENTS[idx]
   },
 }
