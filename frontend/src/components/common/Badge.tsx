@@ -1,6 +1,5 @@
+import type { BadgeVariant } from '@/constants/badgeVariants'
 import { cn } from '@/utils/cn'
-
-type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
 
 const variantClasses: Record<BadgeVariant, string> = {
   default: 'bg-surface-2 text-muted',
