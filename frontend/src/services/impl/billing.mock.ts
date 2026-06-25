@@ -27,12 +27,12 @@ export const billingServiceMock = {
     return { ...found, isOpen: false }
   },
 
-  generateReports: async (_periodId: number) => {
+  generateReports: async (_: number) => {
     await delay()
     return MOCK_PAYMENT_REPORTS
   },
 
-  reportsByPayroll: async (_payrollPeriodId: number) => {
+  reportsByPayroll: async (_: number) => {
     await delay()
     return MOCK_PAYMENT_REPORTS
   },

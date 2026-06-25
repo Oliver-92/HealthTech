@@ -2,21 +2,13 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 
-/**
- * Revalida el token persistido contra /auth/me al iniciar la app.
- * Devuelve `ready` en false mientras se comprueba, para que el router
- * no renderice contenido protegido con un token ya vencido.
- */
 export function useSessionBootstrap(): boolean {
-  const [ready, setReady] = useState(false)
+  // Si no hay token, ya estamos listos — no hay nada que revalidar
+  const [ready, setReady] = useState(() => !useAuthStore.getState().token)
 
   useEffect(() => {
     const token = useAuthStore.getState().token
-
-    if (!token) {
-      setReady(true)
-      return
-    }
+    if (!token) return
 
     authService
       .me()

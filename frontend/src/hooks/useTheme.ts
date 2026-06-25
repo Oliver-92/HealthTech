@@ -6,7 +6,7 @@ const getInitial = (): Theme => {
   try {
     const stored = localStorage.getItem('theme') as Theme | null
     if (stored === 'light' || stored === 'dark') return stored
-  } catch {}
+  } catch { /* noop */ }
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
@@ -14,7 +14,7 @@ const applyTheme = (theme: Theme) => {
   document.documentElement.classList.toggle('dark', theme === 'dark')
   try {
     localStorage.setItem('theme', theme)
-  } catch {}
+  } catch { /* noop */ }
 }
 
 export const useTheme = () => {

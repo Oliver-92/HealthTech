@@ -174,6 +174,7 @@ function SmokeTest() {
   }
 
   // Carga cuidadores automáticamente al montar
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadCaregivers() }, [])
 
   return (

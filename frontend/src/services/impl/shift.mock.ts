@@ -51,7 +51,7 @@ export const shiftServiceMock = {
     return { ...found, status: dto.status, updatedAt: new Date().toISOString() }
   },
 
-  remove: async (_id: number): Promise<void> => {
+  remove: async (_: number): Promise<void> => {
     await delay()
   },
 
