@@ -39,7 +39,7 @@ export function Sidebar() {
             type="button"
             onClick={() => setSidebar(false)}
             aria-label="Cerrar menú"
-            className="md:hidden text-muted hover:text-foreground transition-colors p-1 rounded-[--radius]"
+            className="md:hidden text-muted hover:text-foreground transition-colors p-1 rounded-(--radius)"
           >
             <X size={18} />
           </button>
@@ -54,7 +54,7 @@ export function Sidebar() {
               onClick={() => setSidebar(false)}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-[--radius] px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-(--radius) px-3 py-2 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted hover:bg-surface-2 hover:text-foreground',

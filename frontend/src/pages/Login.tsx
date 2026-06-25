@@ -79,7 +79,7 @@ export function Login() {
         </div>
 
         {/* Card del form */}
-        <div className="bg-surface border border-border rounded-[--radius] shadow-sm p-6">
+        <div className="bg-surface border border-border rounded-(--radius) shadow-sm p-6">
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <Input
               type="email"
@@ -109,7 +109,7 @@ export function Login() {
 
         {/* Credenciales mock (solo en desarrollo) */}
         {USE_MOCKS && (
-          <div className="bg-surface-2 border border-border rounded-[--radius] p-4 space-y-2">
+          <div className="bg-surface-2 border border-border rounded-(--radius) p-4 space-y-2">
             <p className="text-xs font-medium text-muted uppercase tracking-wide">
               Credenciales de prueba
             </p>
@@ -118,7 +118,7 @@ export function Login() {
                 key={r}
                 type="button"
                 onClick={() => fillCredentials(email, password)}
-                className="w-full text-left rounded-[--radius] px-3 py-2 text-xs hover:bg-border transition-colors"
+                className="w-full text-left rounded-(--radius) px-3 py-2 text-xs hover:bg-border transition-colors"
               >
                 <span className="font-medium text-foreground">{r}</span>
                 <span className="text-muted ml-2">{email}</span>

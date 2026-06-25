@@ -60,7 +60,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          'relative z-10 w-full bg-surface border border-border rounded-[--radius] shadow-lg',
+          'relative z-10 w-full bg-surface border border-border rounded-(--radius) shadow-lg',
           'focus:outline-none',
           sizeClasses[size],
         )}
@@ -75,7 +75,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="text-muted hover:text-foreground transition-colors rounded-[--radius] p-1 hover:bg-surface-2"
+              className="text-muted hover:text-foreground transition-colors rounded-(--radius) p-1 hover:bg-surface-2"
             >
               <X size={18} />
             </button>
@@ -87,7 +87,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
 
         {/* Footer */}
         {footer && (
-          <div className="px-5 py-4 border-t border-border bg-surface-2 rounded-b-[--radius] flex justify-end gap-2">
+          <div className="px-5 py-4 border-t border-border bg-surface-2 rounded-b-(--radius) flex justify-end gap-2">
             {footer}
           </div>
         )}

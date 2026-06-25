@@ -10,7 +10,7 @@ export function Card({ title, footer, children, className, ...props }: CardProps
   return (
     <div
       className={cn(
-        'bg-surface border border-border rounded-[--radius] shadow-sm',
+        'bg-surface border border-border rounded-(--radius) shadow-sm',
         className,
       )}
       {...props}
@@ -22,7 +22,7 @@ export function Card({ title, footer, children, className, ...props }: CardProps
       )}
       <div className="px-5 py-4">{children}</div>
       {footer && (
-        <div className="px-5 py-4 border-t border-border bg-surface-2 rounded-b-[--radius]">
+        <div className="px-5 py-4 border-t border-border bg-surface-2 rounded-b-(--radius)">
           {footer}
         </div>
       )}

@@ -38,7 +38,7 @@ export function Select({
         aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
         className={cn(
-          'w-full bg-surface border rounded-[--radius] px-3 py-2 text-sm text-foreground',
+          'w-full bg-surface border rounded-(--radius) px-3 py-2 text-sm text-foreground',
           'transition-colors appearance-none cursor-pointer',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
           'disabled:opacity-50 disabled:cursor-not-allowed',

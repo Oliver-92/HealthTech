@@ -15,7 +15,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       onClick={toggle}
       aria-label="Cambiar tema"
       className={cn(
-        'inline-flex items-center justify-center rounded-[--radius] p-2',
+        'inline-flex items-center justify-center rounded-(--radius) p-2',
         'border border-border bg-surface text-foreground',
         'hover:bg-surface-2 transition-colors',
         className,

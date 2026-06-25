@@ -29,7 +29,7 @@ export function Pagination({ page, pageSize, total, onPageChange, className }: P
           disabled={isFirst}
           aria-label="Página anterior"
           className={cn(
-            'inline-flex items-center justify-center size-8 rounded-[--radius] border border-border',
+            'inline-flex items-center justify-center size-8 rounded-(--radius) border border-border',
             'hover:bg-surface-2 transition-colors',
             'disabled:opacity-40 disabled:cursor-not-allowed',
           )}
@@ -42,7 +42,7 @@ export function Pagination({ page, pageSize, total, onPageChange, className }: P
           disabled={isLast}
           aria-label="Página siguiente"
           className={cn(
-            'inline-flex items-center justify-center size-8 rounded-[--radius] border border-border',
+            'inline-flex items-center justify-center size-8 rounded-(--radius) border border-border',
             'hover:bg-surface-2 transition-colors',
             'disabled:opacity-40 disabled:cursor-not-allowed',
           )}

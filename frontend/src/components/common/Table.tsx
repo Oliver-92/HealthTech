@@ -27,7 +27,7 @@ export function Table<T>({
   className,
 }: TableProps<T>) {
   return (
-    <div className={cn('w-full overflow-x-auto rounded-[--radius] border border-border', className)}>
+    <div className={cn('w-full overflow-x-auto rounded-(--radius) border border-border', className)}>
       <table className="w-full text-sm">
         <thead className="bg-surface-2 text-muted">
           <tr>

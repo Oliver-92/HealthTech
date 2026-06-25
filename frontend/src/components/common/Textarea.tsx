@@ -36,7 +36,7 @@ export function Textarea({
         aria-invalid={!!error}
         aria-describedby={describedBy}
         className={cn(
-          'w-full bg-surface border rounded-[--radius] px-3 py-2 text-sm text-foreground',
+          'w-full bg-surface border rounded-(--radius) px-3 py-2 text-sm text-foreground',
           'placeholder:text-muted transition-colors resize-y min-h-[80px]',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
           'disabled:opacity-50 disabled:cursor-not-allowed',

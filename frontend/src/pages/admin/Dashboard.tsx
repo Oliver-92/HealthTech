@@ -26,8 +26,8 @@ const ACCENT_CLASSES: Record<NonNullable<MetricCardProps['accent']>, string> = {
 
 function MetricCard({ label, value, icon: Icon, hint, accent = 'primary' }: MetricCardProps) {
   return (
-    <div className="flex items-start gap-4 p-5 bg-surface border border-border rounded-[--radius] shadow-sm">
-      <div className={`rounded-[--radius] p-2.5 shrink-0 ${ACCENT_CLASSES[accent]}`}>
+    <div className="flex items-start gap-4 p-5 bg-surface border border-border rounded-(--radius) shadow-sm">
+      <div className={`rounded-(--radius) p-2.5 shrink-0 ${ACCENT_CLASSES[accent]}`}>
         <Icon size={22} />
       </div>
       <div className="min-w-0">
