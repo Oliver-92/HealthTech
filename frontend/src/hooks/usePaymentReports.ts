@@ -11,7 +11,7 @@ export function usePaymentReports(periodId: number | null) {
   const [tick,    setTick]    = useState(0)
 
   useEffect(() => {
-    if (!periodId) { setItems([]); setLoading(false); return }
+    if (!periodId) return
     let cancelled = false
     setLoading(true)
     billingService
