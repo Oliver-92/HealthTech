@@ -4,17 +4,18 @@ import { REPORT_STATUS } from '@/constants/statuses'
 import type { Report } from '@/types'
 
 interface Props {
-  open: boolean
-  report: Report | null
-  onClose: () => void
-  onApprove: (id: number) => void
-  onReject:  (id: number) => void
+  open:      boolean
+  report:    Report | null
+  onClose:   () => void
+  onApprove?: (id: number) => void
+  onReject?:  (id: number) => void
+  readOnly?:  boolean
 }
 
-export function ReportDetailModal({ open, report, onClose, onApprove, onReject }: Props) {
+export function ReportDetailModal({ open, report, onClose, onApprove, onReject, readOnly = false }: Props) {
   if (!report) return null
   const cfg = REPORT_STATUS[report.status]
-  const canAct = report.status === 'SUBMITTED'
+  const canAct = !readOnly && report.status === 'SUBMITTED' && !!onApprove && !!onReject
 
   return (
     <Modal
@@ -27,8 +28,8 @@ export function ReportDetailModal({ open, report, onClose, onApprove, onReject }
           <Button variant="outline" onClick={onClose}>Cerrar</Button>
           {canAct && (
             <div className="flex gap-2">
-              <Button variant="danger" onClick={() => onReject(report.id)}>Rechazar</Button>
-              <Button onClick={() => onApprove(report.id)}>Aprobar</Button>
+              <Button variant="danger" onClick={() => onReject!(report.id)}>Rechazar</Button>
+              <Button onClick={() => onApprove!(report.id)}>Aprobar</Button>
             </div>
           )}
         </div>

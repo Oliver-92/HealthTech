@@ -76,6 +76,12 @@ export const MENU_ITEMS: MenuItem[] = [
   },
   // Patient
   {
+    label: 'Dashboard',
+    path: '/patient/dashboard',
+    icon: LayoutDashboard,
+    roles: ['PATIENT'],
+  },
+  {
     label: 'Mis informes',
     path: '/patient/reports',
     icon: FileText,
