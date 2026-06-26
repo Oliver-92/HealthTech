@@ -1,6 +1,14 @@
 import type { ShiftStatus, ReportStatus, PaymentReportStatus } from '@/types'
 import type { BadgeVariant } from './badgeVariants'
 
+export const SHIFT_TRANSITIONS: Record<ShiftStatus, ShiftStatus[]> = {
+  SCHEDULED:   ['IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
+  IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+  COMPLETED:   [],
+  CANCELLED:   [],
+  NO_SHOW:     [],
+}
+
 interface StatusConfig {
   label: string
   variant: BadgeVariant
