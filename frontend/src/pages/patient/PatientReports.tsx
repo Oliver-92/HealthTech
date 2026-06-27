@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { Table, Badge, Button, Select, LoadingSpinner, EmptyState, AsyncBoundary } from '@/components/common'
+import { Table, Badge, Button, Select, EmptyState, AsyncBoundary } from '@/components/common'
 import { ReportDetailModal } from '@/pages/admin/ReportDetailModal'
 import { useMyReports } from '@/hooks/useMyReports'
-import { reportService } from '@/services/reportService'
-import { handleError } from '@/utils/handleError'
 import { formatDate, formatTime } from '@/utils/formatDate'
 import { REPORT_STATUS } from '@/constants/statuses'
 import type { Column } from '@/components/common'
@@ -17,20 +15,9 @@ const STATUS_OPTIONS = [
 export function PatientReports() {
   const { items, loading, error, statusFilter, setStatusFilter, refetch } = useMyReports()
 
-  const [selected,      setSelected]      = useState<Report | null>(null)
-  const [loadingDetail, setLoadingDetail] = useState(false)
-
-  const openDetail = async (id: number) => {
-    setLoadingDetail(true)
-    try {
-      const report = await reportService.getById(id)
-      setSelected(report)
-    } catch (err) {
-      handleError(err)
-    } finally {
-      setLoadingDetail(false)
-    }
-  }
+  // El listado /me/reports ya trae el informe completo; el detalle se abre con el
+  // objeto de la fila (sin pegarle a /reports/:id, que es admin-only).
+  const [selected, setSelected] = useState<Report | null>(null)
 
   const columns: Column<Report>[] = [
     {
@@ -66,7 +53,7 @@ export function PatientReports() {
       header: '',
       className: 'w-24',
       render: (r) => (
-        <Button size="sm" variant="ghost" onClick={() => openDetail(r.id)}>
+        <Button size="sm" variant="ghost" onClick={() => setSelected(r)}>
           Ver
         </Button>
       ),
@@ -88,7 +75,6 @@ export function PatientReports() {
           onChange={(e) => setStatusFilter((e.target.value || undefined) as ReportStatus | undefined)}
           className="w-44"
         />
-        {loadingDetail && <LoadingSpinner size="sm" />}
       </div>
 
       <AsyncBoundary
