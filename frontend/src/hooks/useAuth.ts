@@ -11,5 +11,11 @@ export function useAuth() {
     return res.user
   }
 
-  return { user, role, isAuthenticated, login, logout: clear }
+  const logout = () => {
+    clear() // limpia la sesión local de inmediato (evita race con la redirección)
+    // best-effort: invalida la cookie de refresh en el backend
+    void authService.logout().catch(() => {})
+  }
+
+  return { user, role, isAuthenticated, login, logout }
 }
