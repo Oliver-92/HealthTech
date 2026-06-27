@@ -345,7 +345,7 @@ export function Billing() {
 
       {/* Modales */}
       <PeriodFormModal
-        key={periodModalOpen ? 'open' : 'closed'}
+        key={periodModalOpen ? 'period-open' : 'period-closed'}
         open={periodModalOpen}
         onClose={() => setPeriodModalOpen(false)}
         onSubmit={createPeriod}
@@ -362,7 +362,7 @@ export function Billing() {
       />
 
       <PayModal
-        key={payModal?.id ?? 'closed'}
+        key={payModal ? `pay-${payModal.id}` : 'pay-closed'}
         open={!!payModal}
         report={payModal}
         onClose={() => setPayModal(null)}

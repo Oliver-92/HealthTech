@@ -1,24 +1,28 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { roleHome } from '@/constants/roles'
 import { setNavigate } from '@/utils/navigation'
 import { ProtectedRoute } from './ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
+import { FullScreenLoader } from '@/components/common'
 
+// Login se carga eager: es la primera pantalla y evita un flash de Suspense.
 import { Login } from '@/pages/Login'
-import { AdminDashboard } from '@/pages/admin/Dashboard'
-import { Caregivers } from '@/pages/admin/Caregivers'
-import { Patients } from '@/pages/admin/Patients'
-import { Shifts } from '@/pages/admin/Shifts'
-import { Reports } from '@/pages/admin/Reports'
-import { Billing } from '@/pages/admin/Billing'
-import { CaregiverDashboard } from '@/pages/caregiver/Dashboard'
-import { MyShifts } from '@/pages/caregiver/MyShifts'
-import { MyReports } from '@/pages/caregiver/MyReports'
-import { UploadReport } from '@/pages/caregiver/UploadReport'
-import { PatientDashboard } from '@/pages/patient/Dashboard'
-import { PatientReports } from '@/pages/patient/PatientReports'
+
+// Páginas autenticadas: code-splitting por ruta/rol (named exports → default).
+const AdminDashboard    = lazy(() => import('@/pages/admin/Dashboard').then((m) => ({ default: m.AdminDashboard })))
+const Caregivers        = lazy(() => import('@/pages/admin/Caregivers').then((m) => ({ default: m.Caregivers })))
+const Patients          = lazy(() => import('@/pages/admin/Patients').then((m) => ({ default: m.Patients })))
+const Shifts            = lazy(() => import('@/pages/admin/Shifts').then((m) => ({ default: m.Shifts })))
+const Reports           = lazy(() => import('@/pages/admin/Reports').then((m) => ({ default: m.Reports })))
+const Billing           = lazy(() => import('@/pages/admin/Billing').then((m) => ({ default: m.Billing })))
+const CaregiverDashboard = lazy(() => import('@/pages/caregiver/Dashboard').then((m) => ({ default: m.CaregiverDashboard })))
+const MyShifts          = lazy(() => import('@/pages/caregiver/MyShifts').then((m) => ({ default: m.MyShifts })))
+const MyReports         = lazy(() => import('@/pages/caregiver/MyReports').then((m) => ({ default: m.MyReports })))
+const UploadReport      = lazy(() => import('@/pages/caregiver/UploadReport').then((m) => ({ default: m.UploadReport })))
+const PatientDashboard  = lazy(() => import('@/pages/patient/Dashboard').then((m) => ({ default: m.PatientDashboard })))
+const PatientReports    = lazy(() => import('@/pages/patient/PatientReports').then((m) => ({ default: m.PatientReports })))
 
 // Expone la función de navegación de React Router al interceptor de axios (401)
 function NavigationBridge() {
@@ -53,6 +57,7 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <NavigationBridge />
+      <Suspense fallback={<FullScreenLoader />}>
       <Routes>
         {/* Público */}
         <Route path="/login" element={<Login />} />
@@ -91,6 +96,7 @@ export function AppRouter() {
         <Route path="/"  element={<RootRedirect />} />
         <Route path="*"  element={<NotFound />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

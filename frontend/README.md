@@ -5,9 +5,12 @@ Frontend de la aplicación CareConnect (Vite + React). Sistema de gestión integ
 - **Core**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
 - **Estilos**: [TailwindCSS](https://tailwindcss.com/)
 - **Estado Global**: [Zustand](https://github.com/pmndrs/zustand)
-- **Ruteo**: [React Router DOM](https://reactrouter.com/)
+- **Ruteo**: [React Router DOM](https://reactrouter.com/) (con code-splitting por ruta vía `React.lazy`)
+- **Validación**: [Zod](https://zod.dev/)
+- **HTTP**: [Axios](https://axios-http.com/) (interceptores de token y errores)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
 - **Notificaciones**: [React Toastify](https://fkhadra.github.io/react-toastify/introduction/)
+- **Testing**: [Vitest](https://vitest.dev/) + [React Testing Library](https://testing-library.com/)
 
 ## ✨ Funcionalidades Clave
 
@@ -30,12 +33,14 @@ src/
 ├── pages/           # Vistas principales organizadas por dominio
 │   ├── admin/       # Vistas exclusivas del rol administrador
 │   ├── caregiver/   # Vistas para acompañantes
-│   ├── family/      # Vistas para familiares/pacientes
-│   └── home/        # Pantalla de inicio y login
-├── router/          # Configuración de rutas (AppRouter)
-├── services/        # Capa de servicios para comunicación con la API (Mocks incluidos)
-├── store/           # Gestión de estado global con Zustand
-└── utils/           # Utilidades y manejadores de errores centralizados
+│   ├── patient/     # Vistas para familiares/pacientes (solo lectura)
+│   └── Login.tsx    # Pantalla de login
+├── router/          # Configuración de rutas (AppRouter, ProtectedRoute)
+├── services/        # Capa de servicios para comunicación con la API (mocks + impl real)
+├── store/           # Gestión de estado global con Zustand (auth, ui)
+├── test/            # Setup global de Vitest
+├── utils/           # Utilidades y manejadores de errores centralizados
+└── validations/     # Esquemas Zod por formulario
 ```
 
 ## 🛠️ Instalación y Uso
@@ -58,33 +63,67 @@ src/
    El servidor iniciará en `http://localhost:5173`.
 
 > [!NOTE]
-> **Ejecución sin Backend**: El frontend está preparado para funcionar de forma **independiente** (standalone) mediante el uso de **mocks** en la capa de servicios. Esto permite previsualizar todas las vistas y flujos de usuario sin necesidad de tener el backend corriendo, ya que la conexión front-back aún se encuentra en proceso de integración.
+> **Ejecución sin Backend**: con `VITE_USE_MOCKS=true` la capa de servicios usa **mocks** en memoria, permitiendo previsualizar todas las vistas sin backend. Con `VITE_USE_MOCKS=false` (default) el frontend consume la API REST real.
 
 ---
 
-## ⚙️ Configuración y Backend
+## 📜 Scripts
 
-Esta sección detalla cómo integrar el frontend con el backend local. 
+| Script | Descripción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo (`http://localhost:5173`). |
+| `npm run build` | Typecheck (`tsc -b`) + build de producción a `dist/`. |
+| `npm run preview` | Sirve el `dist/` localmente (con fallback SPA). |
+| `npm run lint` | ESLint sobre todo el proyecto. |
+| `npm test` | Corre la suite de tests una vez (Vitest). |
+| `npm run test:watch` | Tests en modo watch. |
+| `npm run test:cov` | Tests + reporte de cobertura (v8). |
+| `npm run verify` | **Gate de calidad**: `tsc -b` + `eslint` + `vitest run`. |
+
+## ⚙️ Configuración y Backend
 
 ### Variables de entorno
 
-El frontend necesita apuntar al backend local. Crear un archivo `.env` en la raíz de `src` (o raíz del proyecto según configuración) con:
+Crear un `.env` en la raíz de `frontend/` (ver `.env.example`):
 
 ```
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_USE_MOCKS=false
 ```
 
-En el código, el baseURL se obtiene con `import.meta.env.VITE_API_BASE_URL`.
+- `VITE_API_BASE_URL`: base de la API REST (incluye el prefijo `/api`).
+- `VITE_USE_MOCKS`: si es `true`, la capa de servicios usa mocks en memoria y no requiere backend.
 
-### Requisitos del Sistema
-- Node.js 18+ y npm o yarn
-- Git
-- Backend corriendo en `http://localhost:8080` (ver repositorio de backend)
+Para producción existe `.env.production` (ajustar `VITE_API_BASE_URL` al backend desplegado).
+Nunca poner secretos: todo lo `VITE_*` queda expuesto en el bundle del cliente.
 
-### Recomendaciones
-- Usar la variable `VITE_API_BASE_URL` para configurar el punto de enlace.
-- Asegurarse de tener habilitado CORS en el backend.
+### Requisitos
+- Node.js 18+ y npm
+- Backend corriendo en `http://localhost:8080` con CORS habilitado para el origen del front
+  (`FRONTEND_URL`), salvo que se usen mocks (`VITE_USE_MOCKS=true`).
+
+## 🧪 Testing
+
+Suite con **Vitest + React Testing Library** (entorno `jsdom`). Cubre lo crítico:
+validaciones Zod, utilidades puras, componentes `common/` más usados, hooks y el gating
+de `ProtectedRoute`. Correr con `npm test` o el gate completo con `npm run verify`.
+
+## 🚢 Build y Deploy
+
+```bash
+npm run build      # genera dist/ estático
+npm run preview    # validación local con fallback SPA
+```
+
+El hosting debe reescribir **todas** las rutas a `index.html` (SPA con routing del lado
+cliente). Ya se incluyen:
+- **Netlify**: `public/_redirects` → `/* /index.html 200` (se copia a `dist/`).
+- **Vercel**: `vercel.json` con `rewrites` a `/index.html`.
+- **Nginx**: `try_files $uri /index.html;`.
+
+En producción, el `FRONTEND_URL` del backend debe incluir el dominio del front (CORS).
 
 ### Problemas comunes
-- **Respuestas vacías**: La base de datos puede no tener datos cargados (chequear migraciones y crear datos de prueba).
-- **Errores 409/500**: Revisar la respuesta JSON del backend (`ErrorResponse`) para detalles específicos.
+- **Deep links dan 404 en el hosting**: falta la reescritura a `index.html` (ver arriba).
+- **CORS bloqueado**: el `FRONTEND_URL` del backend no coincide con el origen del front.
+- **Respuestas vacías**: la base puede no tener datos (correr seed/migraciones del backend).
