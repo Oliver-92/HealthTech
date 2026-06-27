@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { USE_MOCKS } from '@/services/config'
 import type { AuthUser, Role } from '@/types'
 
 interface AuthState {
@@ -28,8 +29,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'healthtech-auth',
-      // Solo persiste token y user; role e isAuthenticated se recalculan al rehidratar
-      partialize: (s) => ({ token: s.token, user: s.user }),
+      // En modo real el access token vive solo en memoria: la sesión se restaura al
+      // cargar vía /auth/refresh (cookie httpOnly), no desde localStorage.
+      // En modo mock (demo) no hay backend, así que persistimos token+user para
+      // sobrevivir el reload. role e isAuthenticated se recalculan al rehidratar.
+      partialize: (s) => (USE_MOCKS ? { token: s.token, user: s.user } : {}),
       onRehydrateStorage: () => (state) => {
         if (state?.token && state?.user) {
           state.isAuthenticated = true

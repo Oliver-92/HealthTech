@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import cookieParser from 'cookie-parser'
 import { pinoHttp } from 'pino-http'
 import { env } from './config/env.js'
 import { logger } from './config/logger.js'
@@ -30,6 +31,7 @@ app.use(
   }),
 )
 app.use(express.json({ limit: '100kb' }))
+app.use(cookieParser())
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/health', healthRouter)

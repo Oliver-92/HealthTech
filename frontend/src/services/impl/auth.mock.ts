@@ -19,4 +19,17 @@ export const authServiceMock = {
     if (!entry) throw new Error('No autenticado')
     return entry.user
   },
+
+  // En modo mock no hay cookie: el refresh devuelve la sesión persistida (o falla)
+  refresh: async (): Promise<{ token: string; user: AuthUser }> => {
+    await delay()
+    const token = useAuthStore.getState().token
+    const entry = Object.values(MOCK_USERS).find((u) => u.token === token)
+    if (!entry) throw new Error('No autenticado')
+    return { token: entry.token, user: entry.user }
+  },
+
+  logout: async (): Promise<void> => {
+    await delay(0)
+  },
 }
