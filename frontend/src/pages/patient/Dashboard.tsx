@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { FileText, ClipboardCheck, CalendarDays } from 'lucide-react'
-import { Card, Button, LoadingSpinner, EmptyState } from '@/components/common'
+import { Card, Button, EmptyState, AsyncBoundary } from '@/components/common'
 import { useAuthStore } from '@/store/authStore'
 import { useMyReports } from '@/hooks/useMyReports'
 import { formatDate, formatTime } from '@/utils/formatDate'
@@ -9,7 +9,7 @@ export function PatientDashboard() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
-  const { items: reports, loading } = useMyReports()
+  const { items: reports, loading, error, refetch } = useMyReports()
 
   const latest = reports[0] ?? null
   const total  = reports.length
@@ -22,11 +22,7 @@ export function PatientDashboard() {
         <p className="text-sm text-muted mt-1">{user?.email}</p>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : (
+      <AsyncBoundary loading={loading} error={error} onRetry={refetch}>
         <>
           {/* Métricas */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -87,7 +83,7 @@ export function PatientDashboard() {
             </Card>
           )}
         </>
-      )}
+      </AsyncBoundary>
     </div>
   )
 }

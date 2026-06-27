@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { CalendarClock, ChevronDown, Pencil, Trash2 } from 'lucide-react'
 import {
   Table, Badge, Button, Pagination,
-  Select, ConfirmDialog,
+  Select, ConfirmDialog, AsyncBoundary,
 } from '@/components/common'
 import { useShifts } from '@/hooks/useShifts'
 import { formatDate, formatTime } from '@/utils/formatDate'
@@ -28,7 +28,7 @@ export function Shifts() {
     page, pageSize,
     setCaregiverFilter, setPatientFilter, setStatusFilter,
     setFromFilter, setToFilter, setPage,
-    create, update, updateStatus, remove,
+    create, update, updateStatus, remove, refetch,
   } = useShifts()
 
   // Listas para selects de filtros y modal
@@ -239,22 +239,18 @@ export function Shifts() {
         </div>
       </div>
 
-      {error ? (
-        <p className="text-sm text-danger">{error}</p>
-      ) : (
-        <>
-          <Table
-            columns={columns}
-            data={items}
-            keyField="id"
-            isLoading={loading}
-            emptyMessage="No se encontraron guardias"
-          />
-          {total > pageSize && (
-            <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
-          )}
-        </>
-      )}
+      <AsyncBoundary loading={false} error={error} onRetry={refetch}>
+        <Table
+          columns={columns}
+          data={items}
+          keyField="id"
+          isLoading={loading}
+          emptyMessage="No se encontraron guardias"
+        />
+        {total > pageSize && (
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
+        )}
+      </AsyncBoundary>
 
       <ShiftFormModal
         key={modalOpen ? `${modalMode}-${selected?.id ?? 'new'}` : 'closed'}

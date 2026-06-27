@@ -61,27 +61,26 @@ export function usePatients() {
     setLoading(true)
   }
 
-  const create = async (dto: CreatePatientDto): Promise<boolean> => {
+  // create/update muestran el toast y RE-LANZAN para que el form mapee el error por campo
+  const create = async (dto: CreatePatientDto): Promise<void> => {
     try {
       await patientService.create(dto)
       toast.success('Paciente creado')
       refetch()
-      return true
     } catch (err) {
       handleError(err)
-      return false
+      throw err
     }
   }
 
-  const update = async (id: number, dto: UpdatePatientDto): Promise<boolean> => {
+  const update = async (id: number, dto: UpdatePatientDto): Promise<void> => {
     try {
       await patientService.update(id, dto)
       toast.success('Paciente actualizado')
       refetch()
-      return true
     } catch (err) {
       handleError(err)
-      return false
+      throw err
     }
   }
 

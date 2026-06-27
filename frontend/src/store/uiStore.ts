@@ -9,7 +9,9 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>()((set) => ({
-  sidebarOpen: true,
+  // Cerrado por defecto: en mobile evita que el drawer tape el contenido al cargar;
+  // en desktop el Sidebar se muestra siempre vía `md:static md:translate-x-0`.
+  sidebarOpen: false,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebar: (open) => set({ sidebarOpen: open }),
   globalLoading: false,

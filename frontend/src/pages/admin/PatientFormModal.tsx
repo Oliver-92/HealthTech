@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal, Button, Input, Textarea } from '@/components/common'
 import { createPatientSchema, updatePatientSchema } from '@/validations/patientSchema'
 import { dateInput } from '@/utils/formatDate'
+import { applyApiFieldErrors } from '@/utils/formErrors'
 import type { Patient, CreatePatientDto, UpdatePatientDto } from '@/types'
 
 interface Props {
@@ -9,8 +10,10 @@ interface Props {
   mode: 'create' | 'edit'
   initial?: Patient
   onClose: () => void
-  onSubmit: (dto: CreatePatientDto | UpdatePatientDto) => Promise<boolean>
+  onSubmit: (dto: CreatePatientDto | UpdatePatientDto) => Promise<void>
 }
+
+const FIELD_NAMES = ['firstName', 'lastName', 'documentId', 'birthDate', 'address', 'phone', 'emergencyContact', 'notes', 'email', 'password'] as const
 
 interface FormState {
   firstName: string
@@ -84,9 +87,17 @@ export function PatientFormModal({ open, mode, initial, onClose, onSubmit }: Pro
     }
 
     setLoading(true)
-    const ok = await onSubmit(data as CreatePatientDto | UpdatePatientDto)
-    setLoading(false)
-    if (ok) onClose()
+    try {
+      await onSubmit(data as CreatePatientDto | UpdatePatientDto)
+      onClose()
+    } catch (err) {
+      // El toast ya lo mostró el hook; acá mapeamos el error al campo correspondiente
+      applyApiFieldErrors(err, FIELD_NAMES, (field, message) =>
+        setErrors((prev) => ({ ...prev, [field]: message })),
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   const isEdit = mode === 'edit'

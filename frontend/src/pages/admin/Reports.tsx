@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Eye, CheckCircle, XCircle } from 'lucide-react'
-import { Table, Badge, Button, Pagination, Select } from '@/components/common'
+import { Table, Badge, Button, Pagination, Select, AsyncBoundary } from '@/components/common'
 import { useReports } from '@/hooks/useReports'
 import { reportService } from '@/services/reportService'
 import { handleError } from '@/utils/handleError'
@@ -198,22 +198,18 @@ export function Reports() {
         />
       </div>
 
-      {error ? (
-        <p className="text-sm text-danger">{error}</p>
-      ) : (
-        <>
-          <Table
-            columns={columns}
-            data={items}
-            keyField="id"
-            isLoading={loading}
-            emptyMessage="No se encontraron informes"
-          />
-          {total > pageSize && (
-            <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
-          )}
-        </>
-      )}
+      <AsyncBoundary loading={false} error={error} onRetry={refetch}>
+        <Table
+          columns={columns}
+          data={items}
+          keyField="id"
+          isLoading={loading}
+          emptyMessage="No se encontraron informes"
+        />
+        {total > pageSize && (
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
+        )}
+      </AsyncBoundary>
 
       <ReportDetailModal
         open={detailOpen && !loadingDetail}

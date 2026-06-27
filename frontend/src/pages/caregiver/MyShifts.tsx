@@ -1,4 +1,4 @@
-import { Select, LoadingSpinner, EmptyState } from '@/components/common'
+import { Select, EmptyState, AsyncBoundary } from '@/components/common'
 import { useMyShifts } from '@/hooks/useMyShifts'
 import { SHIFT_STATUS } from '@/constants/statuses'
 import { ShiftCard } from './ShiftCard'
@@ -13,7 +13,7 @@ export function MyShifts() {
   const {
     items, loading, error,
     statusFilter, fromFilter, toFilter,
-    setStatusFilter, setFromFilter, setToFilter,
+    setStatusFilter, setFromFilter, setToFilter, refetch,
   } = useMyShifts()
 
   return (
@@ -47,24 +47,24 @@ export function MyShifts() {
         />
       </div>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="Sin guardias"
-          description="No tenés guardias asignadas con los filtros actuales."
-        />
-      ) : (
+      <AsyncBoundary
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+        isEmpty={items.length === 0}
+        emptyState={
+          <EmptyState
+            title="Sin guardias"
+            description="No tenés guardias asignadas con los filtros actuales."
+          />
+        }
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((shift) => (
             <ShiftCard key={shift.id} shift={shift} />
           ))}
         </div>
-      )}
+      </AsyncBoundary>
     </div>
   )
 }

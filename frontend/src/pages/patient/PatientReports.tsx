@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Table, Badge, Button, Select, LoadingSpinner, EmptyState } from '@/components/common'
+import { Table, Badge, Button, Select, LoadingSpinner, EmptyState, AsyncBoundary } from '@/components/common'
 import { ReportDetailModal } from '@/pages/admin/ReportDetailModal'
 import { useMyReports } from '@/hooks/useMyReports'
 import { reportService } from '@/services/reportService'
@@ -15,7 +15,7 @@ const STATUS_OPTIONS = [
 ]
 
 export function PatientReports() {
-  const { items, loading, error, statusFilter, setStatusFilter } = useMyReports()
+  const { items, loading, error, statusFilter, setStatusFilter, refetch } = useMyReports()
 
   const [selected,      setSelected]      = useState<Report | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -91,20 +91,20 @@ export function PatientReports() {
         {loadingDetail && <LoadingSpinner size="sm" />}
       </div>
 
-      {error ? (
-        <p className="text-sm text-danger">{error}</p>
-      ) : loading ? (
-        <div className="flex justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="Sin informes"
-          description="Aún no hay informes disponibles para tu seguimiento."
-        />
-      ) : (
+      <AsyncBoundary
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+        isEmpty={items.length === 0}
+        emptyState={
+          <EmptyState
+            title="Sin informes"
+            description="Aún no hay informes disponibles para tu seguimiento."
+          />
+        }
+      >
         <Table columns={columns} data={items} keyField="id" isLoading={false} emptyMessage="Sin informes" />
-      )}
+      </AsyncBoundary>
 
       <ReportDetailModal
         open={!!selected}

@@ -6,14 +6,22 @@ import type { PaymentReport, PaymentMethod } from '@/types'
 
 export function usePaymentReports(periodId: number | null) {
   const [items,   setItems]   = useState<PaymentReport[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(periodId !== null)
   const [error,   setError]   = useState<string | null>(null)
   const [tick,    setTick]    = useState(0)
+
+  // Resetea el loading al cambiar de período o al refetch (ajuste de estado en
+  // render: patrón de React para evitar setState síncrono dentro del efecto).
+  const [syncKey, setSyncKey] = useState(`${periodId}:${tick}`)
+  const currentKey = `${periodId}:${tick}`
+  if (currentKey !== syncKey) {
+    setSyncKey(currentKey)
+    setLoading(periodId !== null)
+  }
 
   useEffect(() => {
     if (!periodId) return
     let cancelled = false
-    setLoading(true)
     billingService
       .reportsByPayroll(periodId)
       .then((data) => {

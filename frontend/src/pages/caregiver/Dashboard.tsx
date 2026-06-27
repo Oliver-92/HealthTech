@@ -1,5 +1,5 @@
 import { CalendarDays, FileText, Clock, CheckCircle } from 'lucide-react'
-import { Card, Badge, LoadingSpinner } from '@/components/common'
+import { Card, Badge, AsyncBoundary } from '@/components/common'
 import { useMyShifts } from '@/hooks/useMyShifts'
 import { useMyReports } from '@/hooks/useMyReports'
 import { ShiftCard } from './ShiftCard'
@@ -23,8 +23,8 @@ function StatCard({ icon, label, value, variant = 'default' }: {
 }
 
 export function CaregiverDashboard() {
-  const { items: shifts, loading: loadingShifts } = useMyShifts()
-  const { items: reports, loading: loadingReports } = useMyReports()
+  const { items: shifts, loading: loadingShifts, error: errorShifts, refetch: refetchShifts } = useMyShifts()
+  const { items: reports, loading: loadingReports, error: errorReports, refetch: refetchReports } = useMyReports()
 
   const upcoming = shifts.filter((s) => s.status === 'SCHEDULED').slice(0, 3)
 
@@ -41,40 +41,42 @@ export function CaregiverDashboard() {
       </div>
 
       {/* Stats */}
-      {loadingReports || loadingShifts ? (
-        <div className="flex justify-center py-6">
-          <LoadingSpinner />
-        </div>
-      ) : (
+      <AsyncBoundary
+        loading={loadingReports || loadingShifts}
+        error={errorShifts ?? errorReports}
+        onRetry={() => { refetchShifts(); refetchReports() }}
+      >
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={<CalendarDays size={24} />} label="Guardias prog." value={shifts.filter((s) => s.status === 'SCHEDULED').length} />
           <StatCard icon={<Clock size={24} />} label="Borradores" value={drafts} variant="default" />
           <StatCard icon={<FileText size={24} />} label="En revisión" value={submitted} variant="info" />
           <StatCard icon={<CheckCircle size={24} />} label="Aprobados" value={approved} variant="success" />
         </div>
-      )}
 
-      {/* Rechazados — alerta */}
-      {!loadingReports && rejected > 0 && (
-        <div className="bg-danger/10 border border-danger/30 rounded-(--radius) px-4 py-3 text-sm text-danger font-medium">
-          Tenés {rejected} informe{rejected > 1 ? 's' : ''} rechazado{rejected > 1 ? 's' : ''} — revisá y reenviá desde "Mis guardias".
-        </div>
-      )}
+        {/* Rechazados — alerta */}
+        {rejected > 0 && (
+          <div className="bg-danger/10 border border-danger/30 rounded-(--radius) px-4 py-3 mt-4 text-sm text-danger font-medium">
+            Tenés {rejected} informe{rejected > 1 ? 's' : ''} rechazado{rejected > 1 ? 's' : ''} — revisá y reenviá desde "Mis guardias".
+          </div>
+        )}
+      </AsyncBoundary>
 
       {/* Próximas guardias */}
       <div>
         <h2 className="text-base font-semibold text-foreground mb-3">Próximas guardias</h2>
-        {loadingShifts ? (
-          <LoadingSpinner />
-        ) : upcoming.length === 0 ? (
-          <p className="text-sm text-muted">No tenés guardias programadas próximamente.</p>
-        ) : (
+        <AsyncBoundary
+          loading={loadingShifts}
+          error={errorShifts}
+          onRetry={refetchShifts}
+          isEmpty={upcoming.length === 0}
+          emptyState={<p className="text-sm text-muted">No tenés guardias programadas próximamente.</p>}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {upcoming.map((s) => (
               <ShiftCard key={s.id} shift={s} />
             ))}
           </div>
-        )}
+        </AsyncBoundary>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pencil, UserX } from 'lucide-react'
 import {
   Table, Badge, Button, Pagination,
-  ResourceToolbar, ConfirmDialog,
+  ResourceToolbar, ConfirmDialog, AsyncBoundary,
 } from '@/components/common'
 import { usePatients } from '@/hooks/usePatients'
 import { formatDate } from '@/utils/formatDate'
@@ -15,7 +15,7 @@ export function Patients() {
     items, total, loading, error,
     query, activeFilter, page, pageSize,
     setQuery, setActiveFilter, setPage,
-    create, update, deactivate,
+    create, update, deactivate, refetch,
   } = usePatients()
 
   // Modal create/edit
@@ -47,7 +47,7 @@ export function Patients() {
 
   const handleSubmit = async (dto: CreatePatientDto | UpdatePatientDto) => {
     if (modalMode === 'create') return create(dto as CreatePatientDto)
-    if (!selected) return false
+    if (!selected) return
     return update(selected.id, dto as UpdatePatientDto)
   }
 
@@ -136,27 +136,23 @@ export function Patients() {
         searchPlaceholder="Buscar por nombre o documento…"
       />
 
-      {error ? (
-        <p className="text-sm text-danger">{error}</p>
-      ) : (
-        <>
-          <Table
-            columns={columns}
-            data={items}
-            keyField="id"
-            isLoading={loading}
-            emptyMessage="No se encontraron pacientes"
+      <AsyncBoundary loading={false} error={error} onRetry={refetch}>
+        <Table
+          columns={columns}
+          data={items}
+          keyField="id"
+          isLoading={loading}
+          emptyMessage="No se encontraron pacientes"
+        />
+        {total > pageSize && (
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
           />
-          {total > pageSize && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              total={total}
-              onPageChange={setPage}
-            />
-          )}
-        </>
-      )}
+        )}
+      </AsyncBoundary>
 
       <PatientFormModal
         key={modalOpen ? `${modalMode}-${selected?.id ?? 'new'}` : 'closed'}

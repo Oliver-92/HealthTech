@@ -63,27 +63,26 @@ export function useCaregivers() {
     setLoading(true)
   }
 
-  const create = async (dto: CreateCaregiverDto): Promise<boolean> => {
+  // create/update muestran el toast y RE-LANZAN para que el form mapee el error por campo
+  const create = async (dto: CreateCaregiverDto): Promise<void> => {
     try {
       await caregiverService.create(dto)
       toast.success('Cuidador creado')
       refetch()
-      return true
     } catch (err) {
       handleError(err)
-      return false
+      throw err
     }
   }
 
-  const update = async (id: number, dto: UpdateCaregiverDto): Promise<boolean> => {
+  const update = async (id: number, dto: UpdateCaregiverDto): Promise<void> => {
     try {
       await caregiverService.update(id, dto)
       toast.success('Cuidador actualizado')
       refetch()
-      return true
     } catch (err) {
       handleError(err)
-      return false
+      throw err
     }
   }
 

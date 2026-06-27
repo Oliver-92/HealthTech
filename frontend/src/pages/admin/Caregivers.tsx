@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pencil, UserX } from 'lucide-react'
 import {
   Table, Badge, Button, Pagination,
-  ResourceToolbar, ConfirmDialog,
+  ResourceToolbar, ConfirmDialog, AsyncBoundary,
 } from '@/components/common'
 import { useCaregivers } from '@/hooks/useCaregivers'
 import { formatDate } from '@/utils/formatDate'
@@ -16,7 +16,7 @@ export function Caregivers() {
     items, total, loading, error,
     query, activeFilter, page, pageSize,
     setQuery, setActiveFilter, setPage,
-    create, update, deactivate,
+    create, update, deactivate, refetch,
   } = useCaregivers()
 
   // Modal create/edit
@@ -48,7 +48,7 @@ export function Caregivers() {
 
   const handleSubmit = async (dto: CreateCaregiverDto | UpdateCaregiverDto) => {
     if (modalMode === 'create') return create(dto as CreateCaregiverDto)
-    if (!selected) return false
+    if (!selected) return
     return update(selected.id, dto as UpdateCaregiverDto)
   }
 
@@ -138,27 +138,23 @@ export function Caregivers() {
         searchPlaceholder="Buscar por nombre o documento…"
       />
 
-      {error ? (
-        <p className="text-sm text-danger">{error}</p>
-      ) : (
-        <>
-          <Table
-            columns={columns}
-            data={items}
-            keyField="id"
-            isLoading={loading}
-            emptyMessage="No se encontraron cuidadores"
+      <AsyncBoundary loading={false} error={error} onRetry={refetch}>
+        <Table
+          columns={columns}
+          data={items}
+          keyField="id"
+          isLoading={loading}
+          emptyMessage="No se encontraron cuidadores"
+        />
+        {total > pageSize && (
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
           />
-          {total > pageSize && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              total={total}
-              onPageChange={setPage}
-            />
-          )}
-        </>
-      )}
+        )}
+      </AsyncBoundary>
 
       <CaregiverFormModal
         key={modalOpen ? `${modalMode}-${selected?.id ?? 'new'}` : 'closed'}

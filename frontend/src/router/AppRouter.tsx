@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { roleHome } from '@/constants/roles'
+import { setNavigate } from '@/utils/navigation'
 import { ProtectedRoute } from './ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
 
@@ -17,6 +19,15 @@ import { MyReports } from '@/pages/caregiver/MyReports'
 import { UploadReport } from '@/pages/caregiver/UploadReport'
 import { PatientDashboard } from '@/pages/patient/Dashboard'
 import { PatientReports } from '@/pages/patient/PatientReports'
+
+// Expone la función de navegación de React Router al interceptor de axios (401)
+function NavigationBridge() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    setNavigate((path) => navigate(path))
+  }, [navigate])
+  return null
+}
 
 // Redirige la raíz al home del rol o a /login
 function RootRedirect() {
@@ -41,6 +52,7 @@ function NotFound() {
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <NavigationBridge />
       <Routes>
         {/* Público */}
         <Route path="/login" element={<Login />} />
