@@ -1,13 +1,12 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/store/authStore'
-import { roleHome } from '@/constants/roles'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { setNavigate } from '@/utils/navigation'
 import { ProtectedRoute } from './ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
 import { FullScreenLoader } from '@/components/common'
 
-// Login se carga eager: es la primera pantalla y evita un flash de Suspense.
+// Landing y Login se cargan eager: son la entrada del demo y evitan un flash de Suspense.
+import { Landing } from '@/pages/Landing'
 import { Login } from '@/pages/Login'
 
 // Páginas autenticadas: code-splitting por ruta/rol (named exports → default).
@@ -33,13 +32,6 @@ function NavigationBridge() {
   return null
 }
 
-// Redirige la raíz al home del rol o a /login
-function RootRedirect() {
-  const { isAuthenticated, role } = useAuthStore()
-  if (isAuthenticated && role) return <Navigate to={roleHome(role)} replace />
-  return <Navigate to="/login" replace />
-}
-
 // 404
 function NotFound() {
   return (
@@ -59,7 +51,8 @@ export function AppRouter() {
       <NavigationBridge />
       <Suspense fallback={<FullScreenLoader />}>
       <Routes>
-        {/* Público */}
+        {/* Público — la raíz del demo es la landing de presentación */}
+        <Route path="/"      element={<Landing />} />
         <Route path="/login" element={<Login />} />
 
         {/* ADMIN — autenticado + layout */}
@@ -92,8 +85,7 @@ export function AppRouter() {
           </Route>
         </Route>
 
-        {/* Raíz y 404 */}
-        <Route path="/"  element={<RootRedirect />} />
+        {/* 404 */}
         <Route path="*"  element={<NotFound />} />
       </Routes>
       </Suspense>
