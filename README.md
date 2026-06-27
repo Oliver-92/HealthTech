@@ -53,7 +53,7 @@ HealthTech/
 │   │   ├── middlewares/           # auth (JWT), requireRole, validate (Zod), errorHandler
 │   │   ├── utils/                 # ApiError, schemas comunes, pagination
 │   │   └── modules/
-│   │       ├── auth/              # login, me
+│   │       ├── auth/              # login, refresh, logout, me
 │   │       ├── caregivers/        # ABM cuidadores
 │   │       ├── patients/          # ABM pacientes
 │   │       ├── shifts/            # guardias + máquina de estados
@@ -99,8 +99,10 @@ npm run dev            # http://localhost:8080
 |---|---|---|
 | `PORT` | `8080` | Puerto del servidor |
 | `DATABASE_URL` | `postgresql://user:pass@localhost:5432/healthtech` | Conexión a PostgreSQL |
-| `JWT_SECRET` | `cadena-secreta-min-16-chars` | Mínimo 16 caracteres |
-| `JWT_EXPIRES_IN` | `7d` | Formato `ms` (`7d`, `10h`, `3600`) |
+| `JWT_SECRET` | `cadena-secreta-min-16-chars` | Secret del **access token**. Mínimo 16 caracteres |
+| `JWT_EXPIRES_IN` | `15m` | Vida del access token. Formato `ms` (`15m`, `10h`, `3600`) |
+| `JWT_REFRESH_SECRET` | `otra-cadena-min-16-chars` | Secret del **refresh token**. Debe ser **distinto** de `JWT_SECRET` |
+| `JWT_REFRESH_EXPIRES_IN` | `7d` | Vida del refresh token |
 | `NODE_ENV` | `development` | `development` \| `production` \| `test` |
 | `FRONTEND_URL` | `http://localhost:5173` | Origen permitido por CORS |
 
@@ -123,7 +125,8 @@ npm run dev            # http://localhost:8080
 
 ### Autenticación y convenciones
 
-- **Auth:** enviar el JWT en el header `Authorization: Bearer <token>`. Se obtiene desde `POST /api/auth/login`.
+- **Auth:** enviar el **access token** en el header `Authorization: Bearer <token>`. Se obtiene desde `POST /api/auth/login`.
+- **Access + refresh token:** el access token es de **vida corta** (15 min, en memoria del cliente). El `login` además setea un **refresh token** en una cookie `httpOnly` (no accesible a JS, mitiga XSS), acotada a `/api/auth`. Cuando el access token vence, el cliente lo renueva con `POST /api/auth/refresh` (que **rota** el par de tokens usando la cookie). `POST /api/auth/logout` limpia la cookie. Requiere enviar credenciales con la request (`credentials: 'include'` / `withCredentials`).
 - **Respuesta de éxito:** el recurso directo (objeto o array). En listados con paginación (`page`/`pageSize`) se devuelve `{ data, total, page, pageSize }`.
 - **Respuesta de error:** siempre `{ "message": "…", "errors": [] }`.
 
@@ -144,11 +147,13 @@ npm run dev            # http://localhost:8080
 
 | Método | Ruta | Rol | Body | Descripción |
 |---|---|---|---|---|
-| POST | `/auth/login` | público | `{ email, password }` | Devuelve `{ token, user }` |
+| POST | `/auth/login` | público | `{ email, password }` | Devuelve `{ token, user }` y setea la cookie `refreshToken` |
+| POST | `/auth/refresh` | cookie | — | Renueva (y rota) el access token desde la cookie. Devuelve `{ token, user }` |
+| POST | `/auth/logout` | público | — | Limpia la cookie de refresh (`204`) |
 | GET | `/auth/me` | autenticado | — | Usuario actual desde el token |
 
 ```jsonc
-// POST /api/auth/login
+// POST /api/auth/login   (responde Set-Cookie: refreshToken=…; HttpOnly; SameSite=Lax)
 { "email": "admin@healthtech.com", "password": "Admin1234!" }
 // 200 →
 { "token": "eyJhbGci…", "user": { "id": 1, "email": "admin@healthtech.com", "role": "ADMIN" } }
