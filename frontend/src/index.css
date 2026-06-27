@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'AR one sans';
+  src: url('./assets/fonts/AROneSans.ttf') format('truetype');
+  font-weight: 200 1000;
+  font-style: normal;
+}
+
 /* Dark mode por clase (.dark en <html>) */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -51,7 +58,7 @@
   --color-danger: var(--danger);
   --color-info: var(--info);
   --color-ring: var(--ring);
-  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'AR one sans', sans-serif;
   --radius: var(--radius);
 }
 
