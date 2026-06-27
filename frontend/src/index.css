@@ -11,6 +11,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;          /* controles nativos (date/time picker, scrollbars) en claro */
   --background: #f8fafc;        /* slate-50  */
   --surface: #ffffff;
   --surface-2: #f1f5f9;         /* slate-100 */
@@ -28,6 +29,7 @@
 }
 
 .dark {
+  color-scheme: dark;           /* ícono del calendario/reloj y popups nativos en oscuro */
   --background: #0b1120;
   --surface: #111827;
   --surface-2: #1e293b;
