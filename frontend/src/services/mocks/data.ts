@@ -6,6 +6,7 @@ import type {
   Report,
   PayrollPeriod,
   PaymentReport,
+  Payment,
   AdminMetrics,
 } from '@/types'
 
@@ -224,6 +225,9 @@ export const MOCK_PAYMENT_REPORTS: PaymentReport[] = [
     payments: [],
   },
 ]
+
+// Pagos ejecutados en el demo (se completa al ejecutar pagos en facturación)
+export const MOCK_PAYMENTS: Payment[] = []
 
 // ── Métricas ─────────────────────────────────────────────────────────────────
 
