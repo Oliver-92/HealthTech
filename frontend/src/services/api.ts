@@ -2,6 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/authStore'
 import { ApiError } from '@/utils/apiError'
 import { redirectToLogin } from '@/utils/navigation'
+import { translateApiMessage } from '@/utils/translateApiMessage'
 import type { AuthUser } from '@/types'
 
 export const api = axios.create({
@@ -58,7 +59,7 @@ api.interceptors.response.use(
     }
 
     const status = response.status ?? 0
-    const backendMessage = response.data?.message
+    const backendMessage = translateApiMessage(response.data?.message)
     const errors = response.data?.errors ?? []
 
     if (status === 401) {
