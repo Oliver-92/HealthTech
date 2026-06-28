@@ -1,19 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { shiftService } from '@/services/shiftService'
 import { handleError } from '@/utils/handleError'
-import { unwrapList } from '@/utils/unwrapList'
-import type { Shift, CreateShiftDto, UpdateShiftDto, ShiftStatus, ShiftListParams } from '@/types'
+import { useResourceList } from './useResourceList'
+import type { Shift, CreateShiftDto, UpdateShiftDto, ShiftStatus } from '@/types'
 
 const PAGE_SIZE = 10
 
 export function useShifts() {
-  const [items, setItems]   = useState<Shift[]>([])
-  const [total, setTotal]   = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
-  const [tick, setTick]     = useState(0)
-
   const [caregiverFilter, setCaregiverFilterState] = useState<number | undefined>()
   const [patientFilter,   setPatientFilterState]   = useState<number | undefined>()
   const [statusFilter,    setStatusFilterState]    = useState<ShiftStatus | undefined>()
@@ -21,42 +15,20 @@ export function useShifts() {
   const [toFilter,        setToFilterState]        = useState<string | undefined>()
   const [page, setPageState] = useState(1)
 
-  useEffect(() => {
-    let cancelled = false
-    const params: ShiftListParams = {
-      caregiverId: caregiverFilter,
-      patientId:   patientFilter,
-      status:      statusFilter,
-      from:        fromFilter,
-      to:          toFilter,
-      page,
-      pageSize:    PAGE_SIZE,
-    }
-    shiftService
-      .list(params)
-      .then((res) => {
-        if (cancelled) return
-        const { data, total: t } = unwrapList(res)
-        setItems(data)
-        setTotal(t)
-        setError(null)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Error al cargar guardias')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [caregiverFilter, patientFilter, statusFilter, fromFilter, toFilter, page, tick])
+  const { items, total, loading, error, refetch, startLoading } = useResourceList<Shift>(
+    () => shiftService.list({
+      caregiverId: caregiverFilter, patientId: patientFilter, status: statusFilter,
+      from: fromFilter, to: toFilter, page, pageSize: PAGE_SIZE,
+    }),
+    [caregiverFilter, patientFilter, statusFilter, fromFilter, toFilter, page],
+  )
 
-  const refetch = () => { setTick((t) => t + 1); setLoading(true) }
-
-  const setCaregiverFilter = (v?: number) => { setCaregiverFilterState(v); setPageState(1); setLoading(true) }
-  const setPatientFilter   = (v?: number) => { setPatientFilterState(v);   setPageState(1); setLoading(true) }
-  const setStatusFilter    = (v?: ShiftStatus) => { setStatusFilterState(v); setPageState(1); setLoading(true) }
-  const setFromFilter      = (v?: string) => { setFromFilterState(v); setPageState(1); setLoading(true) }
-  const setToFilter        = (v?: string) => { setToFilterState(v);   setPageState(1); setLoading(true) }
-  const setPage            = (n: number) => { setPageState(n); setLoading(true) }
+  const setCaregiverFilter = (v?: number) => { setCaregiverFilterState(v); setPageState(1); startLoading() }
+  const setPatientFilter   = (v?: number) => { setPatientFilterState(v);   setPageState(1); startLoading() }
+  const setStatusFilter    = (v?: ShiftStatus) => { setStatusFilterState(v); setPageState(1); startLoading() }
+  const setFromFilter      = (v?: string) => { setFromFilterState(v); setPageState(1); startLoading() }
+  const setToFilter        = (v?: string) => { setToFilterState(v);   setPageState(1); startLoading() }
+  const setPage            = (n: number) => { setPageState(n); startLoading() }
 
   const create = async (dto: CreateShiftDto): Promise<boolean> => {
     try {

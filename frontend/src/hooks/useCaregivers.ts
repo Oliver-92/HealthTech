@@ -1,67 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { caregiverService } from '@/services/caregiverService'
 import { handleError } from '@/utils/handleError'
-import { unwrapList } from '@/utils/unwrapList'
 import { useDebounce } from './useDebounce'
+import { useResourceList } from './useResourceList'
 import type { Caregiver, CreateCaregiverDto, UpdateCaregiverDto } from '@/types'
 
 const PAGE_SIZE = 10
 
 export function useCaregivers() {
-  const [items, setItems]   = useState<Caregiver[]>([])
-  const [total, setTotal]   = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
-  const [tick, setTick]     = useState(0)
-
-  const [rawQuery, setRawQuery]   = useState('')
+  const [rawQuery, setRawQuery]         = useState('')
   const [activeFilter, setActiveFilter] = useState<'true' | 'false' | undefined>()
-  const [page, setPageState]      = useState(1)
+  const [page, setPageState]            = useState(1)
   const debouncedQuery = useDebounce(rawQuery)
 
-  // Effect solo hace async work — setState solo en callbacks
-  useEffect(() => {
-    let cancelled = false
-    caregiverService
-      .list({ q: debouncedQuery || undefined, isActive: activeFilter, page, pageSize: PAGE_SIZE })
-      .then((res) => {
-        if (cancelled) return
-        const { data, total: t } = unwrapList(res)
-        setItems(data)
-        setTotal(t)
-        setError(null)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Error al cargar cuidadores')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [debouncedQuery, activeFilter, page, tick])
+  const { items, total, loading, error, refetch, startLoading } = useResourceList<Caregiver>(
+    () => caregiverService.list({ q: debouncedQuery || undefined, isActive: activeFilter, page, pageSize: PAGE_SIZE }),
+    [debouncedQuery, activeFilter, page],
+  )
 
-  // Setters activan loading antes de que el effect se re-ejecute
-  const setQuery = (q: string) => {
-    setRawQuery(q)
-    setPageState(1)
-    setLoading(true)
-  }
-
-  const setIsActiveFilter = (v?: 'true' | 'false') => {
-    setActiveFilter(v)
-    setPageState(1)
-    setLoading(true)
-  }
-
-  const setPage = (n: number) => {
-    setPageState(n)
-    setLoading(true)
-  }
-
-  const refetch = () => {
-    setTick((t) => t + 1)
-    setLoading(true)
-  }
+  const setQuery = (q: string) => { setRawQuery(q); setPageState(1); startLoading() }
+  const setIsActiveFilter = (v?: 'true' | 'false') => { setActiveFilter(v); setPageState(1); startLoading() }
+  const setPage = (n: number) => { setPageState(n); startLoading() }
 
   // create/update muestran el toast y RE-LANZAN para que el form mapee el error por campo
   const create = async (dto: CreateCaregiverDto): Promise<void> => {
