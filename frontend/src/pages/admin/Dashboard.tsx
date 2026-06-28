@@ -2,7 +2,7 @@ import {
   Users, UserCheck, Clock, FileText, CreditCard, CheckCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Button, LoadingSpinner, EmptyState } from '@/components/common'
+import { EmptyState, AsyncBoundary } from '@/components/common'
 import { useMetrics } from '@/hooks/useMetrics'
 import type { AdminMetrics } from '@/types'
 
@@ -58,24 +58,6 @@ function buildCards(m: AdminMetrics): MetricCardProps[] {
 export function AdminDashboard() {
   const { metrics, loading, error, refetch } = useMetrics()
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  if (error || !metrics) {
-    return (
-      <EmptyState
-        title="No se pudieron cargar las métricas"
-        description={error ?? 'Intentá de nuevo en unos momentos.'}
-        action={<Button size="sm" onClick={refetch}>Reintentar</Button>}
-      />
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -83,11 +65,23 @@ export function AdminDashboard() {
         <p className="text-sm text-muted mt-1">Resumen operativo del período actual</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {buildCards(metrics).map((card) => (
-          <MetricCard key={card.label} {...card} />
-        ))}
-      </div>
+      <AsyncBoundary
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+        isEmpty={!metrics}
+        emptyState={
+          <EmptyState
+            title="No se pudieron cargar las métricas"
+            description="Intentá de nuevo en unos momentos."
+          />
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {metrics &&
+            buildCards(metrics).map((card) => <MetricCard key={card.label} {...card} />)}
+        </div>
+      </AsyncBoundary>
     </div>
   )
 }
