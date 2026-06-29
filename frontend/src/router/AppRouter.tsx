@@ -4,6 +4,7 @@ import { setNavigate } from '@/utils/navigation'
 import { ProtectedRoute } from './ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
 import { FullScreenLoader } from '@/components/common'
+import { Link } from 'react-router-dom'
 
 // Landing y Login se cargan eager: son la entrada del demo y evitan un flash de Suspense.
 import { Landing } from '@/pages/Landing'
@@ -38,16 +39,16 @@ function NotFound() {
     <div className="flex flex-col items-center justify-center min-h-svh gap-3 text-center bg-background text-foreground">
       <p className="text-6xl font-bold text-muted">404</p>
       <p className="text-xl font-semibold">Página no encontrada</p>
-      <a href="/" className="text-sm text-primary underline underline-offset-4">
+      <Link to="/" className="text-sm text-primary underline underline-offset-4">
         Volver al inicio
-      </a>
+      </Link>
     </div>
   )
 }
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter  basename={import.meta.env.BASE_URL}>
       <NavigationBridge />
       <Suspense fallback={<FullScreenLoader />}>
       <Routes>
