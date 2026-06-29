@@ -1,1 +1,0 @@
-import{u as e,x as t}from"./index-DVECkepM.js";function n(){let n=t.getState().user;return e.find(e=>e.user.email===n?.email)?.id??e[0].id}export{n as t};
