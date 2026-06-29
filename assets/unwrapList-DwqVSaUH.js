@@ -1,0 +1,1 @@
+var e=e=>Array.isArray(e)?{data:e,total:e.length}:{data:e.data,total:e.total};export{e as t};

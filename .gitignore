@@ -1,0 +1,23 @@
+# Dependencies
+frontend/node_modules
+backend/node_modules
+
+# Build output
+backend/dist
+
+# Prisma generated client (re-generated with `npm run db:generate`)
+backend/src/generated/
+
+# Environment variables (never commit real secrets)
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Docs (generated / private)
+backend/DOCS
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

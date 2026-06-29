@@ -1,0 +1,1 @@
+var e=new Intl.NumberFormat(`es-AR`,{style:`currency`,currency:`ARS`,minimumFractionDigits:2}),t=t=>e.format(t),n=e=>{let t=Math.floor(e/60),n=e%60;return t===0?`${n}m`:n===0?`${t}h`:`${t}h ${n}m`};export{t as n,n as t};

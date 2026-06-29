@@ -1,0 +1,1 @@
+import{t as e}from"./coerce-57-0TOLM.js";import{a as t,i as n}from"./index-DVECkepM.js";var r=n({workedMinutes:e().int().positive(`Debe ser mayor a 0`),observations:t().optional(),medication:t().optional(),vitalSigns:t().optional()}),i=n({reason:t().min(1,`El motivo es obligatorio`)});export{r as n,i as t};

@@ -1,0 +1,1 @@
+var e=`es-AR`,t=t=>t?new Date(t).toLocaleDateString(e,{day:`2-digit`,month:`2-digit`,year:`numeric`}):`—`,n=e=>e?e.slice(0,10):``,r=e=>e?`${e} hs`:`—`;export{t as n,r,n as t};
